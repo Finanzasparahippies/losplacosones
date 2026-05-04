@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=${DB_NAME:-placosones}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app:Z
+      - static_volume:/app/staticfiles:Z
+      - media_volume:/app/media:Z
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app:Z
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    # Note: NEXT_PUBLIC_API_URL removed to default to /api in lib/api.ts
+
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:Z
+      - static_volume:/app/staticfiles:Z
+      - media_volume:/app/media:Z
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
