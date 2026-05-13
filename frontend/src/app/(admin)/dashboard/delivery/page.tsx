@@ -1,0 +1,208 @@
+'use client';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import GPSManager from '@/components/delivery/GPSManager';
+
+// Dynamic import for Leaflet
+const TrackingMap = dynamic(() => import('@/components/delivery/TrackingMap'), {
+  ssr: false,
+  loading: () => <div className="h-[500px] w-full bg-ceviche-brown/20 animate-pulse rounded-premium" />
+});
+
+const isUpdatingRef = { current: false };
+type TrackingMode = 'OFF' | 'GPS' | 'MANUAL';
+
+export default function AdminDeliveryPage() {
+  const [vehicleLocation, setVehicleLocation] = useState<{latitude: number, longitude: number} | undefined>();
+  const [stops, setStops] = useState([]);
+  const [mode, setMode] = useState<TrackingMode>('OFF');
+  const [isSpoofed, setIsSpoofed] = useState(false);
+
+  // Reference for "Common Ghost Coordinates" to warn but not necessarily block
+  const COMMON_GHOST_LAT = 28.7381;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const locRes = await fetch('/api/delivery/location/');
+        if (locRes.ok) {
+          const data = await locRes.json();
+          const lat = parseFloat(data.latitude);
+          const lng = parseFloat(data.longitude);
+          setVehicleLocation({ latitude: lat, longitude: lng });
+          
+          // Check if it matches known spoofed coords
+          if (Math.abs(lat - COMMON_GHOST_LAT) < 0.001) setIsSpoofed(true);
+        }
+        const stopsRes = await fetch('/api/delivery/stops/');
+        if (stopsRes.ok) setStops(await stopsRes.json());
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const updateServer = useCallback(async (lat: number, lng: number) => {
+    if (isUpdatingRef.current) return;
+    try {
+      isUpdatingRef.current = true;
+      const getCookie = (n: string) => `; ${document.cookie}`.split(`; ${n}=`).pop()?.split(';').shift() || '';
+      await fetch('/api/delivery/location/update/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ latitude: lat, longitude: lng }),
+      });
+      
+      // Dynamic spoof detection: update warning if it matches the "Ghost"
+      if (Math.abs(lat - COMMON_GHOST_LAT) < 0.001) setIsSpoofed(true);
+      else setIsSpoofed(false);
+
+    } catch (e) {} finally {
+      isUpdatingRef.current = false;
+    }
+  }, []);
+
+  // New Dynamic Calibration: Takes whatever the current sensor says and fixes it
+  const captureCurrentLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        setVehicleLocation({ latitude, longitude });
+        updateServer(latitude, longitude);
+        setMode('MANUAL'); // Switch to manual to lock this verified position
+      }, (error) => {
+        alert("No se pudo obtener la ubicación actual del sensor.");
+      });
+    }
+  };
+
+  const handleGPSUpdate = useCallback((lat: number, lng: number) => {
+    if (mode === 'GPS') {
+      setVehicleLocation({ latitude: lat, longitude: lng });
+      updateServer(lat, lng);
+    }
+  }, [mode, updateServer]);
+
+  const handleManualUpdate = useCallback((lat: number, lng: number) => {
+    if (mode === 'MANUAL') {
+      setVehicleLocation({ latitude: lat, longitude: lng });
+      updateServer(lat, lng);
+    }
+  }, [mode, updateServer]);
+
+  return (
+    <div className="p-8 space-y-8">
+      <header className="flex justify-between items-center border-b border-white/5 pb-8">
+        <div>
+          <h1 className="text-4xl font-black text-white uppercase tracking-tighter italic">
+            Delivery <span className="text-ceviche-orange">Tracker</span>
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`w-2 h-2 rounded-full animate-pulse ${mode !== 'OFF' ? 'bg-ceviche-lime' : 'bg-white/20'}`}></span>
+            <p className="text-ceviche-teal/60 font-bold text-xs uppercase tracking-widest">
+              Modo: {mode}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-4 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner">
+            <ModeButton active={mode === 'OFF'} onClick={() => setMode('OFF')} label="Off" />
+            <ModeButton active={mode === 'GPS'} onClick={() => setMode('GPS')} label="Auto GPS" />
+            <ModeButton active={mode === 'MANUAL'} onClick={() => setMode('MANUAL')} label="Manual" />
+          </div>
+          
+          <button 
+            onClick={captureCurrentLocation}
+            className="text-[9px] font-black uppercase text-ceviche-teal hover:text-white transition-colors flex items-center gap-2 px-3 py-1 bg-ceviche-teal/10 rounded-full border border-ceviche-teal/20"
+          >
+            <span>📍 Capturar Ubicación Sensor</span>
+          </button>
+        </div>
+      </header>
+
+      {isSpoofed && mode === 'GPS' && (
+        <div className="bg-ceviche-red/20 border border-ceviche-red/50 p-4 rounded-xl flex items-center gap-4 animate-premium">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <p className="text-ceviche-red font-black uppercase text-xs">Aviso de Ubicación Genérica</p>
+            <p className="text-white/70 text-xs">Tu navegador está reportando una ubicación genérica (Hermosillo). Si no es correcta, usa el modo <b>Manual</b>.</p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <TrackingMap 
+            vehicleLocation={vehicleLocation} 
+            stops={stops} 
+            isDraggable={mode === 'MANUAL'}
+            onMarkerDrag={handleManualUpdate}
+          />
+          
+          <div className="bg-ceviche-brown/40 p-8 rounded-premium border border-white/5 backdrop-blur-sm">
+            <h2 className="text-2xl font-black mb-8 text-ceviche-orange uppercase italic tracking-tight">Entregas Pendientes</h2>
+            <div className="space-y-4">
+              {stops.length === 0 ? (
+                <p className="text-white/20 italic text-center py-8 font-bold uppercase tracking-widest">Sin paradas activas</p>
+              ) : (
+                stops.map((stop: any) => (
+                  <div key={stop.id} className="flex items-center justify-between p-6 bg-black/40 rounded-3xl border border-white/5 hover:border-ceviche-orange/40 transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-ceviche-orange/20 flex items-center justify-center text-ceviche-orange font-black">
+                        {stop.id}
+                      </div>
+                      <div>
+                        <p className="font-black text-white">{stop.name}</p>
+                        <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">{stop.address}</p>
+                      </div>
+                    </div>
+                    <span className={`text-[9px] px-3 py-1 rounded-lg font-black uppercase tracking-widest ${
+                      stop.status === 'ARRIVED' ? 'bg-ceviche-lime text-ceviche-brown' : 'bg-white/10 text-white/40'
+                    }`}>
+                      {stop.status}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <GPSManager 
+            onLocationUpdate={handleGPSUpdate} 
+            isTracking={mode === 'GPS'}
+            setIsTracking={(val) => setMode(val ? 'GPS' : 'OFF')}
+          />
+          
+          <div className="p-8 bg-black/60 rounded-premium border border-white/5">
+            <h3 className="text-xl font-black mb-6 text-white uppercase italic tracking-tighter">Instrucciones</h3>
+            <div className="space-y-4 text-xs font-bold text-white/40 uppercase tracking-tighter">
+              <p>1. Selecciona <span className="text-white">Auto GPS</span> para seguimiento automático.</p>
+              <p>2. Usa <span className="text-white">Manual</span> si necesitas corregir la posición en el mapa.</p>
+              <p>3. El botón <span className="text-ceviche-teal">Capturar</span> toma tu ubicación actual del sensor una sola vez.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModeButton({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${
+        active 
+          ? 'bg-ceviche-orange text-white shadow-xl shadow-ceviche-orange/20 scale-105' 
+          : 'text-white/30 hover:text-white hover:bg-white/5'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
