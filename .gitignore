@@ -1,0 +1,31 @@
+# Entorno
+.env
+.env.local
+.env.*.local
+*.env
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*.class
+venv/
+.venv/
+db.sqlite3
+staticfiles/
+media/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+
+# Docker
+.docker_temp/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
