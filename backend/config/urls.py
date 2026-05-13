@@ -5,11 +5,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('delivery/', include('apps.delivery.urls')),
-    path('newsletter/', include('apps.newsletter.urls')),
-    path('shop/', include('apps.shop.urls')),
-    path('users/', include('apps.users.urls')),
-    path('dashboard/', include('apps.dashboard.urls')),
+    path('api/delivery/', include('apps.delivery.urls')),
+    path('api/newsletter/', include('apps.newsletter.urls')),
+    path('api/shop/', include('apps.shop.urls')),
+    path('api/users/', include('apps.users.urls')),
+    path('api/dashboard/', include('apps.dashboard.urls')),
 ]
 
 if settings.DEBUG:
