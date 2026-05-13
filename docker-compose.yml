@@ -1,5 +1,6 @@
 services:
   db:
+    container_name: ceviche_db
     image: postgres:16-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
@@ -11,6 +12,7 @@ services:
       - "5432:5432"
 
   backend:
+    container_name: ceviche_backend
     build: ./backend
     volumes:
       - ./backend:/app:Z
@@ -24,6 +26,7 @@ services:
       - "8000:8000"
 
   frontend:
+    container_name: ceviche_frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -38,6 +41,7 @@ services:
     # Note: NEXT_PUBLIC_API_URL removed to default to /api in lib/api.ts
 
   nginx:
+    container_name: ceviche_nginx
     build:
       context: ./docker/nginx
       dockerfile: Dockerfile

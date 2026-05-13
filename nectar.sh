@@ -60,7 +60,7 @@ case $COMMAND in
     collectstatic)
         echo "Running collectstatic..."
         # Usamos el nombre del contenedor definido en docker-compose.yml
-        docker exec -it nectar_backend python manage.py collectstatic --no-input
+        docker exec -it ceviche_backend python manage.py collectstatic --no-input
         ;;
     createsuperuser)
         docker compose exec backend python manage.py createsuperuser
