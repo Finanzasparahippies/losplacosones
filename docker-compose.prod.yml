@@ -1,5 +1,6 @@
 services:
   backend:
+    container_name: ceviche_backend
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
@@ -9,37 +10,30 @@ services:
     env_file:
       - .env
     restart: always
+    networks:
+      - default
+      - prod_network
 
   frontend:
+    container_name: ceviche_frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
     env_file:
       - .env
     restart: always
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
-      - ./docker/certbot/conf:/etc/letsencrypt:ro
-      - ./docker/certbot/www:/var/www/certbot:ro
-    depends_on:
-      - backend
-      - frontend
-    restart: always
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./docker/certbot/conf:/etc/letsencrypt
-      - ./docker/certbot/www:/var/www/certbot
+    networks:
+      - default
+      - prod_network
 
 volumes:
   static_volume:
+    name: ceviche_static_volume
   media_volume:
+    name: ceviche_media_volume
+
+networks:
+  prod_network:
+    external: true
+  default:
+    name: ceviche-placosones_default
