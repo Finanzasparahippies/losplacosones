@@ -18,7 +18,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
       try {
-        await auth.getUser();
+        const user = await auth.getUser();
+        // Permite acceso solo a ADMIN, BUSINESS o ANALYST
+        const allowedRoles = ['ADMIN', 'BUSINESS', 'ANALYST'];
+        if (!allowedRoles.includes(user.role)) {
+          router.push('/menu'); // O a la página principal de clientes
+          return;
+        }
         setAuthorized(true);
       } catch (error) {
         auth.logout();

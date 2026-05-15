@@ -12,17 +12,21 @@ show_help() {
     echo ""
     echo "Commands:"
     echo "  dev          - Start development environment (Docker)"
-    echo "  stop         - Stop all containers"
-    echo "  restart      - Restart containers"
-    echo "  logs         - Show real-time logs"
+    echo "  stop           - Stop all containers"
+    echo "  restart        - Restart containers"
+    echo "  logs           - Show real-time logs (Dev)"
+    echo "  logs-prod      - Show real-time logs (Prod)"
     echo "  makemigrations - Generate new database migrations"
-    echo "  migrate      - Run database migrations"
+    echo "  migrate        - Run database migrations (Dev)"
+    echo "  migrate-prod   - Run database migrations (Prod)"
     echo "  createsuperuser - Create a Django admin user"
-    echo "  shell        - Open backend shell"
-    echo "  frontend     - Run frontend locally (npm run dev)"
+    echo "  shell          - Open backend shell (Dev)"
+    echo "  shell-prod     - Open backend shell (Prod)"
+    echo "  frontend       - Run frontend locally (npm run dev)"
     echo "  build          - Build production images"
     echo "  up-prod        - Start production environment"
     echo "  down-prod      - Stop production environment"
+    echo "  restart-prod   - Restart production environment"
     echo "  collectstatic  - Run collectstatic in backend (Prod)"
     echo "  certbot        - Request SSL certificate (Prod)"
     echo "  help           - Show this help"
@@ -51,11 +55,19 @@ case $COMMAND in
     logs)
         docker compose logs -f
         ;;
+    logs-prod)
+        echo "Showing Production Logs..."
+        docker compose -f docker-compose.prod.yml logs -f
+        ;;
     makemigrations)
         docker compose run --rm backend python manage.py makemigrations
         ;;
     migrate)
         docker compose exec backend python manage.py migrate
+        ;;
+    migrate-prod)
+        echo "Running Production Migrations..."
+        docker compose -f docker-compose.prod.yml exec backend python manage.py migrate
         ;;
     collectstatic)
         echo "Running collectstatic..."
@@ -67,11 +79,19 @@ case $COMMAND in
     shell)
         docker compose exec backend python manage.py shell
         ;;
+    shell-prod)
+        echo "Opening Production Backend Shell..."
+        docker compose -f docker-compose.prod.yml exec backend python manage.py shell
+        ;;
     frontend)
         cd frontend && npm run dev
         ;;
     build)
         docker compose -f docker-compose.prod.yml build
+        ;;
+    restart-prod)
+        echo "Restarting Production Environment..."
+        docker compose -f docker-compose.prod.yml restart
         ;;
     certbot)
         DOMAIN=$2

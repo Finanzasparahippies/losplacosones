@@ -23,8 +23,19 @@ export async function fetcher(endpoint: string, options: RequestInit = {}) {
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Unknown error" }));
-    throw new Error(error.detail || error.message || "An error occurred");
+    const errorData = await res.json().catch(() => ({ message: "Unknown error" }));
+    
+    // Handle DRF validation errors (object with field keys)
+    if (typeof errorData === 'object' && !errorData.detail && !errorData.message) {
+      const messages = Object.entries(errorData).map(([key, value]) => {
+        const fieldName = key.charAt(0).toUpperCase() + key.slice(1);
+        const errorMsg = Array.isArray(value) ? value[0] : value;
+        return `${fieldName}: ${errorMsg}`;
+      });
+      throw new Error(messages.join(' | '));
+    }
+
+    throw new Error(errorData.detail || errorData.message || "An error occurred");
   }
 
   return res.json();
