@@ -50,7 +50,7 @@ export default function ProfileOrdersPage() {
     switch(status) {
       case 'PENDING': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
       case 'PREPARING': return 'text-ceviche-orange bg-ceviche-orange/10 border-ceviche-orange/20';
-      case 'OUT_FOR_DELIVERY': return 'text-ceviche-teal bg-ceviche-teal/10 border-ceviche-teal/20';
+      case 'SHIPPED': return 'text-ceviche-teal bg-ceviche-teal/10 border-ceviche-teal/20';
       case 'DELIVERED': return 'text-ceviche-lime bg-ceviche-lime/10 border-ceviche-lime/20';
       case 'CANCELLED': return 'text-ceviche-red bg-ceviche-red/10 border-ceviche-red/20';
       default: return 'text-white bg-white/10 border-white/20';
@@ -61,7 +61,7 @@ export default function ProfileOrdersPage() {
     switch(status) {
       case 'PENDING': return 'Orden Recibida';
       case 'PREPARING': return 'Preparando Ceviche';
-      case 'OUT_FOR_DELIVERY': return 'En Camino a ti';
+      case 'SHIPPED': return 'En Camino a ti';
       case 'DELIVERED': return 'Entregado';
       case 'CANCELLED': return 'Cancelado';
       default: return status;
@@ -132,21 +132,24 @@ export default function ProfileOrdersPage() {
                       </div>
 
                       {/* Mapa en Vivo (Si está en camino) */}
-                      {order.status === 'OUT_FOR_DELIVERY' && order.latitude && order.longitude && (
-                        <div className="w-full md:w-[400px] border-t md:border-t-0 md:border-l border-white/10 bg-black/60 relative">
+                      {order.status === 'SHIPPED' && (
+                        <div className="w-full md:w-[400px] border-t md:border-t-0 md:border-l border-white/10 bg-black/60 relative min-h-[300px]">
                           <div className="absolute top-4 left-4 z-20 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
                             <span className="w-2 h-2 bg-ceviche-lime rounded-full animate-pulse shadow-lg shadow-ceviche-lime/50"></span>
                             <span className="text-[9px] font-black uppercase tracking-widest text-white">Live Tracking</span>
                           </div>
                           <TrackingMap 
                             vehicleLocation={vehicleLocation} 
-                            clientLocation={{ latitude: parseFloat(order.latitude), longitude: parseFloat(order.longitude) }} 
+                            clientLocation={{ 
+                              latitude: order.latitude ? parseFloat(order.latitude) : 33.4550, 
+                              longitude: order.longitude ? parseFloat(order.longitude) : -112.0800 
+                            }} 
                           />
                         </div>
                       )}
 
                       {/* Progreso Visual (Si no está en camino) */}
-                      {order.status !== 'OUT_FOR_DELIVERY' && (
+                      {order.status !== 'SHIPPED' && (
                         <div className="w-full md:w-[400px] border-t md:border-t-0 md:border-l border-white/10 bg-white/5 p-8 flex flex-col justify-center items-center text-center">
                           <div className="w-16 h-16 rounded-full border-4 border-ceviche-orange/20 border-t-ceviche-orange animate-spin mb-4"></div>
                           <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Cocinando</p>
