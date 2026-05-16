@@ -3,9 +3,14 @@
 import { useState, useEffect } from 'react';
 import DashboardStats from '@/components/admin/DashboardStats';
 import Link from 'next/link';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Cell
+} from 'recharts';
+import { TrendingUp, Truck, ShoppingCart, Users, ChevronRight } from 'lucide-react';
 
 export default function DashboardClient() {
-  const [stats, setStats] = useState<any>(null);
+  const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -13,68 +18,149 @@ export default function DashboardClient() {
       try {
         const res = await fetch('/api/dashboard/analytics/');
         if (res.ok) {
-          const data = await res.json();
-          setStats(data);
+          const result = await res.json();
+          setData(result);
         } else {
-          if (res.status === 403) {
-            setError("Acceso denegado. Se requiere ser Administrador.");
-          } else {
-            setError("Error al cargar las analíticas.");
-          }
+          setError(res.status === 403 ? "Acceso denegado." : "Error de carga.");
         }
       } catch (err) {
-        setError("Error de conexión con el servidor.");
+        setError("Error de conexión.");
       }
     };
-
     fetchStats();
   }, []);
 
   if (error) {
     return (
-      <div className="bg-ceviche-red/10 border border-ceviche-red/20 p-6 rounded-premium text-ceviche-red">
-        <p className="font-bold">⚠️ {error}</p>
-        <p className="text-sm mt-2">Asegúrate de estar logueado como superusuario en el admin de Django.</p>
+      <div className="bg-ceviche-orange/10 border border-ceviche-orange/20 p-6 rounded-premium text-ceviche-orange">
+        <p className="font-black italic uppercase">⚠️ {error}</p>
+        <p className="text-sm mt-2 opacity-60">Asegúrate de ser superusuario en Django.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 pb-20">
       {/* Metrics Grid */}
-      <DashboardStats stats={stats} />
+      <DashboardStats stats={data} />
 
-      {/* Quick Actions */}
-      <section>
-        <h2 className="text-2xl font-black text-ceviche-white uppercase mb-6 italic border-b border-ceviche-white/10 pb-2">
-          Acceso Rápido
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link href="/dashboard/delivery" className="group">
-            <div className="bg-ceviche-teal/10 border border-ceviche-teal/20 p-8 rounded-premium group-hover:bg-ceviche-teal/20 transition-all">
-              <h3 className="text-2xl font-black text-ceviche-teal mb-2">🚚 DELIVERY</h3>
-              <p className="text-ceviche-white/60 text-sm">Gestionar rutas y seguimiento en tiempo real.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Sales Chart */}
+        <section className="lg:col-span-2 bg-ceviche-brown/20 border border-white/5 p-8 rounded-premium backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-5 text-ceviche-lime pointer-events-none">
+            <TrendingUp size={120} />
+          </div>
+          
+          <div className="flex justify-between items-center mb-10">
+            <div>
+              <h2 className="text-2xl font-black text-white uppercase italic leading-none">Flujo de Ventas</h2>
+              <p className="text-ceviche-teal/40 text-xs font-bold uppercase tracking-widest mt-2">Últimos 30 días de operación</p>
             </div>
-          </Link>
-          <Link href="/admin/shop/order/" target="_blank" className="group">
-            <div className="bg-ceviche-orange/10 border border-ceviche-orange/20 p-8 rounded-premium group-hover:bg-ceviche-orange/20 transition-all">
-              <h3 className="text-2xl font-black text-ceviche-orange mb-2">🛒 ÓRDENES</h3>
-              <p className="text-ceviche-white/60 text-sm">Ver y procesar pedidos en el panel de Django.</p>
+            <div className="text-right">
+              <span className="text-ceviche-lime font-black text-2xl tracking-tighter">
+                +${data?.financials?.gross_sales.toLocaleString()}
+              </span>
+              <p className="text-[10px] text-white/20 uppercase font-black">Ventas Totales</p>
             </div>
-          </Link>
-          <Link href="/admin/newsletter/subscriber/" target="_blank" className="group">
-            <div className="bg-ceviche-lime/10 border border-ceviche-lime/20 p-8 rounded-premium group-hover:bg-ceviche-lime/20 transition-all">
-              <h3 className="text-2xl font-black text-ceviche-lime mb-2">📧 CLIENTES</h3>
-              <p className="text-ceviche-white/60 text-sm">Lista de suscriptores y marketing.</p>
-            </div>
-          </Link>
-        </div>
-      </section>
+          </div>
 
-      {/* Future Section: Recent Activity or Charts */}
-      <section className="bg-ceviche-white/5 border border-ceviche-white/10 rounded-premium p-8 h-64 flex items-center justify-center italic text-ceviche-teal/30">
-        Gráficas de ventas y actividad reciente próximamente...
-      </section>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data?.charts?.daily_sales || []}>
+                <defs>
+                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ADFF2F" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ADFF2F" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fill: '#ffffff20', fontSize: 10, fontWeight: 'bold'}}
+                />
+                <YAxis hide />
+                <Tooltip 
+                  contentStyle={{backgroundColor: '#1a1412', border: '1px solid #ffffff10', borderRadius: '12px'}}
+                  itemStyle={{color: '#ADFF2F', fontWeight: '900'}}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="sales" 
+                  stroke="#ADFF2F" 
+                  strokeWidth={4}
+                  fillOpacity={1} 
+                  fill="url(#colorSales)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        {/* Quick Actions & Menu */}
+        <section className="space-y-6">
+          <h2 className="text-xl font-black text-white uppercase italic tracking-widest flex items-center gap-3">
+            <span className="w-8 h-[2px] bg-ceviche-orange"></span>
+            Operaciones
+          </h2>
+          
+          <div className="grid grid-cols-1 gap-4">
+            <QuickActionLink 
+              href="/dashboard/delivery" 
+              title="Logística" 
+              subtitle="Rutas y Envíos" 
+              icon={Truck} 
+              color="lime" 
+            />
+            <QuickActionLink 
+              href="/admin/shop/order/" 
+              title="Pedidos" 
+              subtitle="Gestión de Ventas" 
+              icon={ShoppingCart} 
+              color="orange" 
+              external
+            />
+            <QuickActionLink 
+              href="/admin/users/user/" 
+              title="Clientes" 
+              subtitle="Base de Datos" 
+              icon={Users} 
+              color="white" 
+              external
+            />
+          </div>
+        </section>
+      </div>
     </div>
+  );
+}
+
+function QuickActionLink({ href, title, subtitle, icon: Icon, color, external }: any) {
+  const colors: any = {
+    lime: 'text-ceviche-lime border-ceviche-lime/20 bg-ceviche-lime/5 hover:bg-ceviche-lime/10',
+    orange: 'text-ceviche-orange border-ceviche-orange/20 bg-ceviche-orange/5 hover:bg-ceviche-orange/10',
+    white: 'text-white border-white/10 bg-white/5 hover:bg-white/10',
+  };
+
+  const Content = (
+    <div className={`p-6 rounded-premium border ${colors[color]} transition-all group flex items-center justify-between`}>
+      <div className="flex items-center gap-5">
+        <div className="p-3 bg-white/5 rounded-xl group-hover:scale-110 transition-transform">
+          <Icon size={24} />
+        </div>
+        <div>
+          <h3 className="font-black uppercase italic leading-none text-lg tracking-tight">{title}</h3>
+          <p className="text-[10px] uppercase font-bold opacity-40 mt-1">{subtitle}</p>
+        </div>
+      </div>
+      <ChevronRight size={18} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+    </div>
+  );
+
+  return external ? (
+    <a href={href} target="_blank" rel="noopener noreferrer">{Content}</a>
+  ) : (
+    <Link href={href}>{Content}</Link>
   );
 }
