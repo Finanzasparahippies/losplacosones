@@ -54,10 +54,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className="flex-1 p-6 space-y-2 mt-4 overflow-y-auto">
           <NavLink href="/dashboard" icon="🏠" label="Resumen" />
+          <NavLink href="/dashboard/orders" icon="📋" label="Órdenes" />
           <NavLink href="/dashboard/delivery" icon="🚚" label="Delivery GPS" />
           
-          <div className="pt-8 pb-2 px-3 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Gestión</div>
-          <NavLink href="/admin/shop/order/" label="Órdenes" icon="🛒" isExternal />
+          <div className="pt-8 pb-2 px-3 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Backend</div>
+          <NavLink href="/dashboard/system" label="Rendimiento" icon="⚙️" />
           <NavLink href="/admin/newsletter/subscriber/" label="Suscriptores" icon="📧" isExternal />
           <NavLink href="/admin/users/user/" label="Equipo" icon="🔐" isExternal />
         </nav>

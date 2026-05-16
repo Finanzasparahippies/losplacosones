@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, X, ShoppingBag, ExternalLink } from 'lucide-react';
+import { Bell, X, ShoppingBag, ExternalLink, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NotificationToast({ notification, onRemove }: any) {
@@ -28,10 +28,10 @@ export default function NotificationToast({ notification, onRemove }: any) {
         
         <div className="mt-4 flex gap-4">
           <Link 
-            href={`/admin/shop/order/${notification.orderId}/change/`}
+            href="/dashboard/orders"
             className="text-[9px] font-black uppercase text-white/60 hover:text-white transition-colors flex items-center gap-1 border border-white/10 px-3 py-1.5 rounded-lg bg-white/5"
           >
-            Gestión <ExternalLink size={10} />
+            Gestionar Todo <ChevronRight size={10} />
           </Link>
           
           {notification.lat && notification.lng && (
