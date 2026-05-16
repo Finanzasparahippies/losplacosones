@@ -38,15 +38,30 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
 
   const handleSearch = async (query: string) => {
     setAddress(query);
-    if (query.length < 3) return;
-
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
-      const data = await res.json();
-      setSearchResults(data);
-    } catch (e) {
-      console.error("Geocoding error", e);
+    if (query.length < 3) {
+      setSearchResults([]);
+      return;
     }
+
+    // Debounce manual simple
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
+          {
+            headers: {
+              'User-Agent': 'LosPlacosones-App/1.0'
+            }
+          }
+        );
+        const data = await res.json();
+        setSearchResults(data);
+      } catch (e) {
+        console.error("Geocoding error", e);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
   };
 
   const selectResult = (result: any) => {
@@ -65,7 +80,14 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
     // Reverse geocode
     try {
       setLoading(true);
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latLng.lat}&lon=${latLng.lng}`);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latLng.lat}&lon=${latLng.lng}`,
+        {
+          headers: {
+            'User-Agent': 'LosPlacosones-App/1.0'
+          }
+        }
+      );
       const data = await res.json();
       setAddress(data.display_name);
       onAddressChange(data.display_name, latLng.lat, latLng.lng);
@@ -88,6 +110,9 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
           className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:border-ceviche-teal/50 transition-all"
           value={address}
           onChange={(e) => handleSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.preventDefault();
+          }}
         />
         
         {searchResults.length > 0 && (
