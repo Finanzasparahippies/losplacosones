@@ -48,9 +48,9 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
     const timeoutId = setTimeout(async () => {
       try {
         setLoading(true);
-        // Usar nuestro proxy del backend para evitar CORS
+        // Usar nuestro proxy del backend para evitar CORS - IMPORTANTE: Incluir slash final antes del ?
         const data = await fetcher(`/shop/geocode/?q=${encodeURIComponent(searchTerm)}`);
-        setSearchResults(data);
+        setSearchResults(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error("Geocoding error", e);
       } finally {
@@ -79,7 +79,7 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
     const latLng = e.target.getLatLng();
     setPosition([latLng.lat, latLng.lng]);
     
-    // Reverse geocode via proxy
+    // Reverse geocode via proxy - IMPORTANTE: Incluir slash final antes del ?
     try {
       setLoading(true);
       const data = await fetcher(`/shop/reverse-geocode/?lat=${latLng.lat}&lon=${latLng.lng}`);

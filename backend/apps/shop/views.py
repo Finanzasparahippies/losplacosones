@@ -1,7 +1,7 @@
 import requests
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 from .models import Product, Order
 from .serializers import ProductSerializer, OrderSerializer
@@ -21,7 +21,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.filter(user=self.request.user).order_by('-created_at')
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def geocode_proxy(request):
     query = request.GET.get('q')
     if not query:
@@ -37,7 +37,7 @@ def geocode_proxy(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def reverse_geocode_proxy(request):
     lat = request.GET.get('lat')
     lon = request.GET.get('lon')
