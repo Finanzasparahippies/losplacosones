@@ -76,3 +76,15 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
+
+class ChatMessage(models.Model):
+    order = models.ForeignKey(Order, related_name='messages', on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Msg {self.id} on Order {self.order.id} by {self.sender.email}"
