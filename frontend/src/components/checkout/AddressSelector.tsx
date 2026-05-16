@@ -36,32 +36,43 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
     }));
   }, []);
 
-  const handleSearch = async (query: string) => {
-    setAddress(query);
-    if (query.length < 3) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Debounced search effect
+  useEffect(() => {
+    if (searchTerm.length < 3) {
       setSearchResults([]);
       return;
     }
 
-    // Debounce manual simple
     const timeoutId = setTimeout(async () => {
       try {
+        setLoading(true);
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=5`,
           {
             headers: {
-              'User-Agent': 'LosPlacosones-App/1.0'
+              'User-Agent': 'LosPlacosones-App/1.0',
+              'Accept-Language': 'es' // Prefer results in Spanish
             }
           }
         );
+        if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
         setSearchResults(data);
       } catch (e) {
         console.error("Geocoding error", e);
+      } finally {
+        setLoading(false);
       }
-    }, 500);
+    }, 800); // Higher debounce for safety
 
     return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const handleSearch = (query: string) => {
+    setAddress(query);
+    setSearchTerm(query);
   };
 
   const selectResult = (result: any) => {
@@ -102,7 +113,11 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
     <div className="space-y-6 animate-premium">
       <div className="relative group">
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-ceviche-teal">
-          <Search size={18} />
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-ceviche-teal border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <Search size={18} />
+          )}
         </div>
         <input 
           type="text"
