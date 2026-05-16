@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { auth } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +20,22 @@ export default function LoginPage() {
     setError('');
     
     try {
-      await auth.login(email, password);
-      router.push('/dashboard');
+      await login(email, password);
+      
+      // 1. Prioridad: ¿Viene de una página que requiere login (como checkout)?
+      const redirectTo = searchParams.get('redirect');
+      if (redirectTo) {
+        router.push(redirectTo);
+        return;
+      }
+
+      // 2. Si no hay redirección previa, decidir por rol
+      // Usamos una lógica simple basada en el email o podríamos verificar el user devuelto
+      if (email.toLowerCase().includes('admin') || email.toLowerCase().includes('nectar')) {
+         router.push('/dashboard');
+      } else {
+         router.push('/menu');
+      }
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
     } finally {
