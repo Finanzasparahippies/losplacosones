@@ -26,7 +26,7 @@ export default function ProductsManagementPage() {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if(window.confirm('¿Estás seguro de eliminar este producto?')) {
+    if (window.confirm('¿Estás seguro de eliminar este producto?')) {
       try {
         await fetch(`/api/shop/products/${id}/`, {
           method: 'DELETE',
@@ -50,7 +50,7 @@ export default function ProductsManagementPage() {
             Control de Inventario y Precios
           </p>
         </div>
-        <button 
+        <button
           onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
           className="bg-ceviche-teal text-ceviche-brown px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-ceviche-teal/20"
         >
@@ -70,8 +70,8 @@ export default function ProductsManagementPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {products.map((product) => (
-            <div 
-              key={product.id} 
+            <div
+              key={product.id}
               className="bg-black/40 backdrop-blur-xl border border-white/5 rounded-premium overflow-hidden group hover:border-white/20 transition-all shadow-2xl flex flex-col"
             >
               {/* Product Image Placeholder */}
@@ -113,20 +113,19 @@ export default function ProductsManagementPage() {
                     </span>
                   </div>
                 </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => { setEditingProduct(product); setIsModalOpen(true); }}
-                      className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(product.id)}
-                      className="w-8 h-8 rounded-lg bg-ceviche-red/10 flex items-center justify-center text-ceviche-red hover:bg-ceviche-red/20 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setEditingProduct(product); setIsModalOpen(true); }}
+                    className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product.id)}
+                    className="w-8 h-8 rounded-lg bg-ceviche-red/10 flex items-center justify-center text-ceviche-red hover:bg-ceviche-red/20 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -135,10 +134,10 @@ export default function ProductsManagementPage() {
       )}
 
       {isModalOpen && (
-        <ProductModal 
-          product={editingProduct} 
-          onClose={() => setIsModalOpen(false)} 
-          onRefresh={fetchProducts} 
+        <ProductModal
+          product={editingProduct}
+          onClose={() => setIsModalOpen(false)}
+          onRefresh={fetchProducts}
         />
       )}
     </div>
@@ -201,7 +200,7 @@ function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: 
     try {
       const method = product ? 'PATCH' : 'POST';
       const url = product ? `/api/shop/products/${product.id}/` : '/api/shop/products/';
-      
+
       const payload = { ...formData };
       if (!payload.image) delete payload.image;
 
@@ -214,7 +213,7 @@ function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: 
         body: JSON.stringify(payload)
       });
       const savedProduct = await res.json();
-      
+
       if (savedProduct.id) {
         await fetch(`/api/shop/products/${savedProduct.id}/update_recipe/`, {
           method: 'POST',
@@ -225,7 +224,7 @@ function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: 
           body: JSON.stringify({ ingredients: recipe.map(r => ({ ingredient: r.ingredient, quantity: r.quantity })) })
         });
       }
-      
+
       onRefresh();
       onClose();
     } catch (e) {
@@ -234,11 +233,11 @@ function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: 
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium overflow-y-auto py-10"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-black/90 border border-white/10 w-full max-w-4xl rounded-premium shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -250,32 +249,32 @@ function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: 
             <X size={24} />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 flex flex-col md:flex-row gap-8">
           {/* Columna Izquierda: Info Básica */}
           <div className="flex-1 space-y-4">
             <h4 className="text-xs font-black uppercase tracking-widest text-white/60 mb-4 border-b border-white/10 pb-2">Datos Comerciales</h4>
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Nombre</label>
-              <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
+              <input required type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Precio Venta ($)</label>
-                <input required type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value) || 0})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
+                <input required type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Stock Inicial</label>
-                <input required type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: parseInt(e.target.value) || 0})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
+                <input required type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
               </div>
             </div>
 
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Descripción</label>
-              <textarea rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors resize-none"></textarea>
+              <textarea rows={3} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors resize-none"></textarea>
             </div>
-            
+
             <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-2 mt-6">
               <h5 className="text-[10px] font-black uppercase tracking-widest text-white/60">Análisis Financiero</h5>
               <div className="flex justify-between items-center text-sm">
@@ -294,11 +293,11 @@ function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: 
               </div>
             </div>
           </div>
-          
+
           {/* Columna Derecha: Receta */}
           <div className="flex-1 space-y-4">
             <h4 className="text-xs font-black uppercase tracking-widest text-white/60 mb-4 border-b border-white/10 pb-2">Formulación (Receta)</h4>
-            
+
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Agregar Insumo</label>
               <select onChange={handleAddIngredient} defaultValue="" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-orange transition-colors appearance-none">
@@ -317,11 +316,11 @@ function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: 
                     <p className="text-[10px] text-white/40 uppercase font-bold">${item.unit_cost}/{item.unit}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="number" 
-                      step="0.01" 
+                    <input
+                      type="number"
+                      step="0.01"
                       min="0.01"
-                      value={item.quantity} 
+                      value={item.quantity}
                       onChange={(e) => handleQuantityChange(item.ingredient, parseFloat(e.target.value) || 0)}
                       className="w-16 bg-black text-white text-xs font-bold text-center py-1 rounded border border-white/10 focus:border-ceviche-orange outline-none"
                     />
@@ -339,7 +338,7 @@ function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: 
               )}
             </div>
           </div>
-          
+
           {/* Botones Flotantes Ocultos (movidos a un div absoluto o al final) */}
           <div className="fixed bottom-0 left-0 right-0 p-6 bg-black/80 backdrop-blur-xl border-t border-white/10 flex justify-end gap-4 rounded-b-premium">
             <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl font-black uppercase text-xs text-white/60 hover:text-white hover:bg-white/5 transition-colors">
