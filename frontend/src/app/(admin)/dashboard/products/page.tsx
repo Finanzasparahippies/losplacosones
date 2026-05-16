@@ -50,7 +50,6 @@ export default function ProductsManagementPage() {
             Control de Inventario y Precios
           </p>
         </div>
-        </div>
         <button 
           onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
           className="bg-ceviche-teal text-ceviche-brown px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-ceviche-teal/20"
