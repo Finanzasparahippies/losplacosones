@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
+import { useCart } from '@/context/CartContext';
+import { Plus, ShoppingBag, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 interface Product {
   id: number;
@@ -14,6 +17,7 @@ interface Product {
 export default function MenuPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addToCart, count } = useCart();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -56,30 +60,50 @@ export default function MenuPage() {
             {products.map((item, idx) => (
               <div 
                 key={item.id} 
-                className="group relative flex gap-6 p-4 rounded-3xl hover:bg-white/5 transition-all animate-premium"
+                className="group relative flex gap-6 p-6 rounded-3xl hover:bg-white/5 transition-all animate-premium border border-transparent hover:border-white/5"
                 style={{ animationDelay: `${idx * 0.05}s` }}
               >
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/40 flex-shrink-0 border border-white/5 group-hover:border-ceviche-orange/30 transition-colors">
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden bg-black/40 flex-shrink-0 border border-white/5 group-hover:border-ceviche-orange/30 transition-colors shadow-2xl">
                   {item.image ? (
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl opacity-20 grayscale group-hover:grayscale-0 transition-all">🍤</div>
+                    <div className="w-full h-full flex items-center justify-center text-4xl opacity-20 grayscale group-hover:grayscale-0 transition-all">🍤</div>
                   )}
                 </div>
 
-                <div className="flex-1">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight group-hover:text-ceviche-lime transition-colors leading-none">{item.name}</h3>
-                    <span className="text-xl md:text-2xl font-black text-ceviche-orange">${item.price}</span>
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight group-hover:text-ceviche-lime transition-colors leading-none">{item.name}</h3>
+                      <span className="text-xl md:text-2xl font-black text-ceviche-orange">${item.price}</span>
+                    </div>
+                    <p className="text-sm text-white/50 leading-relaxed font-medium line-clamp-2 italic mb-4">
+                      {item.description}
+                    </p>
                   </div>
-                  <p className="text-sm text-white/50 leading-relaxed font-medium line-clamp-3 italic">
-                    {item.description}
-                  </p>
+                  
+                  <button 
+                    onClick={() => addToCart(item)}
+                    className="self-start flex items-center gap-2 bg-ceviche-teal/10 hover:bg-ceviche-teal text-ceviche-teal hover:text-ceviche-brown px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all group/btn"
+                  >
+                    <Plus size={14} className="group-hover/btn:rotate-90 transition-transform" />
+                    Añadir al Carrito
+                  </button>
                 </div>
                 
-                <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-0 group-hover:h-12 bg-ceviche-red transition-all duration-300"></div>
+                <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-0 group-hover:h-16 bg-ceviche-red transition-all duration-300 rounded-full"></div>
               </div>
             ))}
+          </div>
+        )}
+
+        {count > 0 && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+            <Link href="/checkout" className="flex items-center gap-4 bg-ceviche-lime text-ceviche-brown px-8 py-4 rounded-full font-black uppercase shadow-2xl shadow-ceviche-lime/20 group">
+              <ShoppingBag size={20} />
+              <span>Ver Carrito ({count})</span>
+              <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
         )}
         

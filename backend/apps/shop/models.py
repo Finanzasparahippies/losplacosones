@@ -50,9 +50,15 @@ class Order(models.Model):
         DELIVERED = 'DELIVERED', 'Delivered'
         CANCELLED = 'CANCELLED', 'Cancelled'
 
+    class PaymentMethod(models.TextChoices):
+        CASH = 'CASH', 'Efectivo'
+        TRANSFER = 'TRANSFER', 'Transferencia'
+        STRIPE = 'STRIPE', 'Stripe'
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
     delivery_address = models.CharField(max_length=500, blank=True, null=True)
     latitude = models.DecimalField(max_digits=15, decimal_places=10, null=True, blank=True)
     longitude = models.DecimalField(max_digits=15, decimal_places=10, null=True, blank=True)

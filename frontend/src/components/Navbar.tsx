@@ -3,10 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
+import { ShoppingCart, User, LogOut, ShieldAlert } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, isAdmin, logout } = useAuth();
+  const { count } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,24 +39,50 @@ export default function Navbar() {
           
           <div className="h-6 w-[1px] bg-white/10 mx-2"></div>
           
-          <Link 
-            href="/login" 
-            className="text-xs font-black uppercase tracking-widest text-white/50 hover:text-white transition-colors"
-          >
-            Login
+          <Link href="/checkout" className="relative group p-2">
+            <ShoppingCart size={20} className="text-white group-hover:text-ceviche-lime transition-colors" />
+            {count > 0 && (
+              <span className="absolute -top-1 -right-1 bg-ceviche-red text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-bounce">
+                {count}
+              </span>
+            )}
           </Link>
-          <Link 
-            href="/register" 
-            className="bg-ceviche-orange text-ceviche-brown px-6 py-2.5 rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg shadow-ceviche-orange/20"
-          >
-            Registro
-          </Link>
-          <Link 
-            href="/dashboard" 
-            className="bg-ceviche-red text-white px-6 py-2.5 rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg shadow-ceviche-red/20"
-          >
-            Admin
-          </Link>
+
+          {!user ? (
+            <>
+              <Link 
+                href="/login" 
+                className="text-xs font-black uppercase tracking-widest text-white/50 hover:text-white transition-colors"
+              >
+                Login
+              </Link>
+              <Link 
+                href="/register" 
+                className="bg-ceviche-orange text-ceviche-brown px-6 py-2.5 rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all shadow-lg shadow-ceviche-orange/20"
+              >
+                Registro
+              </Link>
+            </>
+          ) : (
+            <div className="flex items-center gap-4">
+              {isAdmin && (
+                <Link 
+                  href="/dashboard" 
+                  className="bg-ceviche-red text-white px-5 py-2 rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all flex items-center gap-2"
+                >
+                  <ShieldAlert size={14} />
+                  Admin
+                </Link>
+              )}
+              <button 
+                onClick={logout}
+                className="text-white/40 hover:text-ceviche-red transition-colors"
+                title="Cerrar Sesión"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Mobile Toggle (Placeholder) */}
