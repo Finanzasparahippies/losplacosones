@@ -17,17 +17,33 @@ export default function NotificationToast({ notification, onRemove }: any) {
         <h3 className="font-black uppercase italic text-sm tracking-tight text-white mb-1">
           {notification.message}
         </h3>
-        <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">
+        {notification.address && (
+          <p className="text-[11px] text-ceviche-teal/80 font-bold uppercase leading-tight mb-2 italic">
+            📍 {notification.address.split(',')[0]}
+          </p>
+        )}
+        <p className="text-[9px] text-white/30 uppercase font-black tracking-widest">
           {new Date(notification.timestamp).toLocaleTimeString()}
         </p>
         
         <div className="mt-4 flex gap-4">
           <Link 
-            href={`/dashboard/orders/${notification.orderId}`}
-            className="text-[9px] font-black uppercase text-ceviche-teal hover:text-white transition-colors flex items-center gap-1"
+            href={`/admin/shop/order/${notification.orderId}/change/`}
+            className="text-[9px] font-black uppercase text-white/60 hover:text-white transition-colors flex items-center gap-1 border border-white/10 px-3 py-1.5 rounded-lg bg-white/5"
           >
-            Ver Detalles <ExternalLink size={10} />
+            Gestión <ExternalLink size={10} />
           </Link>
+          
+          {notification.lat && notification.lng && (
+            <a 
+              href={`https://www.google.com/maps/search/?api=1&query=${notification.lat},${notification.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[9px] font-black uppercase text-ceviche-brown bg-ceviche-lime px-3 py-1.5 rounded-lg hover:scale-105 transition-all shadow-lg shadow-ceviche-lime/20 flex items-center gap-1"
+            >
+              Google Maps 🚀
+            </a>
+          )}
         </div>
       </div>
 

@@ -9,6 +9,9 @@ export interface Notification {
   type: 'ORDER' | 'SYSTEM';
   timestamp: Date;
   orderId?: number;
+  address?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export function useNotifications(isAdmin: boolean) {
@@ -22,16 +25,19 @@ export function useNotifications(isAdmin: boolean) {
       try {
         const orders = await fetcher('/shop/orders/');
         if (orders.length > 0) {
-          const latestOrder = orders[0]; // Assuming ordered by created_at desc
+          const latestOrder = orders[0];
           
           if (lastOrderId.current !== null && latestOrder.id > lastOrderId.current) {
             // New order detected!
             const newNotif: Notification = {
               id: Date.now(),
-              message: `¡Nuevo pedido recibido! #${latestOrder.id}`,
+              message: `¡Nuevo pedido! #${latestOrder.id}`,
               type: 'ORDER',
               timestamp: new Date(),
-              orderId: latestOrder.id
+              orderId: latestOrder.id,
+              address: latestOrder.delivery_address,
+              lat: latestOrder.latitude,
+              lng: latestOrder.longitude
             };
             setNotifications(prev => [newNotif, ...prev]);
             

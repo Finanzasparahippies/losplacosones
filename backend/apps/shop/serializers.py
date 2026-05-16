@@ -16,10 +16,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     items_data = serializers.JSONField(write_only=True)
+    user_email = serializers.ReadOnlyField(source='user.email')
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'total', 'status', 'payment_method', 'delivery_address', 'items', 'items_data', 'created_at']
+        fields = ['id', 'user', 'user_email', 'total', 'status', 'payment_method', 'delivery_address', 'latitude', 'longitude', 'items', 'items_data', 'created_at']
         read_only_fields = ['user', 'total', 'status', 'created_at']
 
     def create(self, validated_data):
