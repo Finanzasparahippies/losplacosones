@@ -83,7 +83,7 @@ export default function ActiveOrderWidget() {
 
   const handleCancelOrder = async () => {
     if (!activeOrder) return;
-    if (!confirm("¿Estás seguro de que deseas cancelar este pedido? Solo puedes hacerlo en los primeros 10 minutos.")) return;
+    if (!confirm("¿Estás seguro de que deseas cancelar este pedido? Solo puedes hacerlo en los primeros 4 minutos y 59 segundos.")) return;
     
     try {
       const res = await fetch(`/api/shop/orders/${activeOrder.id}/cancel_order/`, {

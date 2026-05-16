@@ -46,10 +46,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         if order.user != request.user and not request.user.is_staff:
             return Response({'error': 'No permission'}, status=status.HTTP_403_FORBIDDEN)
             
-        # Check time limit (10 minutes)
+        # Check time limit (4 minutes and 59 seconds max)
         time_diff = timezone.now() - order.created_at
-        if time_diff > datetime.timedelta(minutes=10) and not request.user.is_staff:
-            return Response({'error': 'Han pasado más de 10 minutos desde la creación del pedido.'}, status=status.HTTP_400_BAD_REQUEST)
+        if time_diff >= datetime.timedelta(minutes=5) and not request.user.is_staff:
+            return Response({'error': 'Han pasado más de 4 minutos y 59 segundos desde la creación del pedido.'}, status=status.HTTP_400_BAD_REQUEST)
             
         if order.status == Order.Status.DELIVERED:
             return Response({'error': 'El pedido ya fue entregado.'}, status=status.HTTP_400_BAD_REQUEST)

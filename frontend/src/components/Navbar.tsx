@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { ShoppingCart, User, LogOut, ShieldAlert } from 'lucide-react';
+import { ShoppingCart, User, LogOut, ShieldAlert, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { user, isAdmin, logout } = useAuth();
   const { count } = useCart();
 
@@ -85,17 +86,62 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Toggle (Placeholder) */}
-        <div className="md:hidden text-ceviche-orange text-2xl">☰</div>
+        {/* Mobile Toggle */}
+        <button 
+          className="md:hidden text-ceviche-orange hover:text-white transition-colors"
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+        >
+          {isMobileOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileOpen && (
+        <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-3xl border-b border-white/10 p-8 flex flex-col gap-6 items-center shadow-2xl">
+          <NavLink href="/menu" active={pathname === '/menu'} label="Menú" onClick={() => setIsMobileOpen(false)} />
+          <NavLink href="/tracking" active={pathname === '/tracking'} label="Rastreo" onClick={() => setIsMobileOpen(false)} />
+          
+          <Link href="/checkout" className="relative p-2 mt-2" onClick={() => setIsMobileOpen(false)}>
+            <ShoppingCart size={24} className="text-white" />
+            {count > 0 && (
+              <span className="absolute -top-1 -right-1 bg-ceviche-red text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                {count}
+              </span>
+            )}
+          </Link>
+
+          {!user ? (
+            <div className="flex flex-col gap-4 mt-6 w-full">
+              <Link href="/login" onClick={() => setIsMobileOpen(false)} className="w-full text-center text-xs font-black uppercase tracking-widest text-white/50 hover:text-white py-2">
+                Login
+              </Link>
+              <Link href="/register" onClick={() => setIsMobileOpen(false)} className="w-full text-center bg-ceviche-orange text-ceviche-brown px-6 py-4 rounded-full font-black uppercase text-xs tracking-widest shadow-lg shadow-ceviche-orange/20">
+                Registro
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 mt-6 w-full items-center">
+              {isAdmin && (
+                <Link href="/dashboard" onClick={() => setIsMobileOpen(false)} className="w-full flex justify-center bg-ceviche-red text-white px-5 py-4 rounded-full font-black uppercase text-xs tracking-widest items-center gap-2 shadow-lg shadow-ceviche-red/20">
+                  <ShieldAlert size={16} /> Admin
+                </Link>
+              )}
+              <button onClick={() => { logout(); setIsMobileOpen(false); }} className="w-full py-4 text-white/40 hover:text-ceviche-red uppercase font-black text-xs tracking-widest flex justify-center items-center gap-2 border border-white/10 rounded-full mt-2">
+                <LogOut size={16} /> Cerrar Sesión
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </nav>
   );
 }
 
-function NavLink({ href, active, label }: { href: string, active: boolean, label: string }) {
+function NavLink({ href, active, label, onClick }: { href: string, active: boolean, label: string, onClick?: () => void }) {
   return (
     <Link 
       href={href} 
+      onClick={onClick}
       className={`text-xs font-black uppercase tracking-[0.3em] transition-all relative group ${
         active ? 'text-ceviche-lime' : 'text-white/60 hover:text-white'
       }`}

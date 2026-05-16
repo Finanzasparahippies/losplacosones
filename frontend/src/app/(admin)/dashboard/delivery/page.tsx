@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import GPSManager from '@/components/delivery/GPSManager';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, MapPin } from 'lucide-react';
 import { fetcher } from '@/lib/api';
 
 // Dynamic import for Leaflet
@@ -229,9 +229,21 @@ export default function AdminDeliveryPage() {
                       <button 
                         onClick={() => setChatOrder(stop)}
                         className="bg-ceviche-teal/20 text-ceviche-teal hover:bg-ceviche-teal hover:text-black w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
+                        title="Chat con el cliente"
                       >
                         <MessageCircle size={14} />
                       </button>
+                      {(stop.latitude || stop.address) && (
+                        <a 
+                          href={stop.latitude ? `https://www.google.com/maps/dir/?api=1&destination=${stop.latitude},${stop.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address || '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-blue-500/20 text-blue-500 hover:bg-blue-500 hover:text-white w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
+                          title="Abrir en Google Maps"
+                        >
+                          <MapPin size={14} />
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))
@@ -325,8 +337,14 @@ function DriverChatModal({ order, onClose }: { order: any, onClose: () => void }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-      <div className="bg-black/90 border border-white/10 w-full max-w-md rounded-premium shadow-2xl overflow-hidden flex flex-col h-[500px]">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-black/90 border border-white/10 w-full max-w-md rounded-premium shadow-2xl overflow-hidden flex flex-col h-[500px]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
           <div>
             <h3 className="font-black text-white uppercase tracking-tight">Chat - Orden #{order.id}</h3>

@@ -181,8 +181,14 @@ function UserModal({ user, onClose, onRefresh }: { user: any, onClose: () => voi
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium">
-      <div className="bg-black/90 border border-white/10 w-full max-w-md rounded-premium shadow-2xl overflow-hidden flex flex-col">
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-black/90 border border-white/10 w-full max-w-md rounded-premium shadow-2xl overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
           <h3 className="font-black text-white uppercase tracking-tight text-xl">
             Editar Usuario
