@@ -104,37 +104,73 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
         </div>
         <input 
           type="text"
-          placeholder="Busca tu dirección o mueve el pin..."
-          className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:border-ceviche-teal/50 transition-all"
+          placeholder="Busca tu dirección (Ej: Phoenix Downtown)..."
+          className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-white placeholder:text-white/20 focus:outline-none focus:border-ceviche-teal/50 transition-all shadow-inner"
           value={address}
           onChange={(e) => handleSearch(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') e.preventDefault();
           }}
         />
+
+        {/* Clear button */}
+        {address && (
+          <button
+            onClick={() => {
+              setAddress('');
+              setSearchTerm('');
+              setSearchResults([]);
+            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors"
+          >
+            <div className="text-xl">×</div>
+          </button>
+        )}
         
-        {searchResults.length > 0 && (
-          <div className="absolute z-50 w-full mt-2 bg-ceviche-brown border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
-            {searchResults.map((res, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => selectResult(res)}
-                className="w-full text-left p-4 hover:bg-white/5 text-xs font-bold uppercase tracking-tight border-b border-white/5 last:border-0 transition-colors"
-              >
-                {res.display_name}
-              </button>
-            ))}
+        {/* Results Dropdown */}
+        {searchTerm.length >= 3 && (searchResults.length > 0 || loading) && (
+          <div className="absolute z-[2000] w-full mt-2 bg-ceviche-brown/95 border border-white/10 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+            {loading ? (
+              <div className="p-8 text-center text-white/40 text-xs font-bold uppercase tracking-widest">
+                Buscando en el mapa...
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="max-h-[280px] overflow-y-auto">
+                {searchResults.map((res, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => selectResult(res)}
+                    className="w-full text-left p-4 hover:bg-ceviche-teal/10 flex items-start gap-3 border-b border-white/5 last:border-0 transition-all group"
+                  >
+                    <MapPin size={16} className="text-ceviche-teal mt-0.5 shrink-0 group-hover:scale-125 transition-transform" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-bold text-white leading-tight">
+                        {res.display_name.split(',')[0]}
+                      </span>
+                      <span className="text-[10px] text-white/40 truncate max-w-[300px]">
+                        {res.display_name.split(',').slice(1).join(',')}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-white/40 text-xs font-bold uppercase tracking-widest">
+                No se encontraron resultados
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      <div className="h-[300px] w-full rounded-2xl overflow-hidden border border-white/10 relative group">
+      <div className="h-[350px] w-full rounded-3xl overflow-hidden border border-white/10 relative shadow-2xl group">
         <MapContainer 
           center={position} 
-          zoom={13} 
+          zoom={15} 
           style={{ height: '100%', width: '100%' }}
           scrollWheelZoom={false}
+          className="z-0"
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
