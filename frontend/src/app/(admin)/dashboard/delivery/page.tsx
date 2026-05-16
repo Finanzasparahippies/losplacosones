@@ -192,18 +192,18 @@ export default function AdminDeliveryPage() {
                 <p className="text-white/20 italic text-center py-8 font-bold uppercase tracking-widest">Sin entregas activas</p>
               ) : (
                 stops.map((stop: any) => (
-                  <div key={stop.id} className="flex items-center justify-between p-6 bg-black/40 rounded-3xl border border-white/5 hover:border-ceviche-orange/40 transition-all">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-ceviche-orange/20 flex items-center justify-center text-ceviche-orange font-black">
+                  <div key={stop.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 bg-black/40 rounded-3xl border border-white/5 hover:border-ceviche-orange/40 transition-all gap-4">
+                    <div className="flex items-start sm:items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-ceviche-orange/20 flex items-center justify-center text-ceviche-orange font-black shrink-0">
                         #{stop.id}
                       </div>
-                      <div>
-                        <p className="font-black text-white">{stop.name}</p>
-                        <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">{stop.address}</p>
+                      <div className="min-w-0">
+                        <p className="font-black text-white truncate text-sm sm:text-base">{stop.name}</p>
+                        <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold truncate max-w-[200px] sm:max-w-xs">{stop.address}</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 pt-3 sm:pt-0 border-t border-white/5 sm:border-t-0 justify-end">
                       <span className={`text-[9px] px-3 py-1 rounded-lg font-black uppercase tracking-widest ${
                         stop.status === 'SHIPPED' ? 'bg-ceviche-lime text-ceviche-brown' : 'bg-ceviche-orange/20 text-ceviche-orange'
                       }`}>
@@ -213,7 +213,7 @@ export default function AdminDeliveryPage() {
                       {stop.status === 'PENDING' && (
                          <button 
                            onClick={() => updateOrderStatus(stop.id, 'SHIPPED')}
-                           className="bg-white/10 hover:bg-ceviche-lime hover:text-ceviche-brown text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl transition-colors"
+                           className="bg-white/10 hover:bg-ceviche-lime hover:text-ceviche-brown text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl transition-colors shrink-0"
                          >
                            Iniciar Entrega
                          </button>
@@ -221,29 +221,32 @@ export default function AdminDeliveryPage() {
                       {stop.status === 'SHIPPED' && (
                          <button 
                            onClick={() => updateOrderStatus(stop.id, 'DELIVERED')}
-                           className="bg-ceviche-lime/20 hover:bg-ceviche-lime hover:text-ceviche-brown text-ceviche-lime text-[9px] font-black uppercase px-4 py-2 rounded-xl transition-colors"
+                           className="bg-ceviche-lime/20 hover:bg-ceviche-lime hover:text-ceviche-brown text-ceviche-lime text-[9px] font-black uppercase px-4 py-2 rounded-xl transition-colors shrink-0"
                          >
                            Entregado
                          </button>
                       )}
-                      <button 
-                        onClick={() => setChatOrder(stop)}
-                        className="bg-ceviche-teal/20 text-ceviche-teal hover:bg-ceviche-teal hover:text-black w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
-                        title="Chat con el cliente"
-                      >
-                        <MessageCircle size={14} />
-                      </button>
-                      {(stop.latitude || stop.address) && (
-                        <a 
-                          href={stop.latitude ? `https://www.google.com/maps/dir/?api=1&destination=${stop.latitude},${stop.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address || '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-500/20 text-blue-500 hover:bg-blue-500 hover:text-white w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
-                          title="Abrir en Google Maps"
+                      
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => setChatOrder(stop)}
+                          className="bg-ceviche-teal/20 text-ceviche-teal hover:bg-ceviche-teal hover:text-black w-8 h-8 rounded-xl flex items-center justify-center transition-colors shrink-0"
+                          title="Chat con el cliente"
                         >
-                          <MapPin size={14} />
-                        </a>
-                      )}
+                          <MessageCircle size={14} />
+                        </button>
+                        {(stop.latitude || stop.address) && (
+                          <a 
+                            href={stop.latitude ? `https://www.google.com/maps/dir/?api=1&destination=${stop.latitude},${stop.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address || '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-blue-500/20 text-blue-500 hover:bg-blue-500 hover:text-white w-8 h-8 rounded-xl flex items-center justify-center transition-colors shrink-0"
+                            title="Abrir en Google Maps"
+                          >
+                            <MapPin size={14} />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))

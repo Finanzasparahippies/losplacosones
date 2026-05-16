@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 // Fix for Leaflet icon issues in Next.js
 const icon = L.icon({
@@ -40,20 +40,20 @@ interface Stop {
 
 function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
+  const hasCentered = useRef(false);
+
   useEffect(() => {
     const lat = Number(center[0]);
     const lng = Number(center[1]);
     
-    if (!isNaN(lat) && !isNaN(lng) && lat !== 0) {
-      console.log("✈️ Flying to:", lat, lng);
-      map.flyTo([lat, lng], 16, {
+    if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && !hasCentered.current) {
+      map.flyTo([lat, lng], 14, {
         animate: true,
-        duration: 2.0
+        duration: 1.0
       });
-    } else {
-      console.warn("⚠️ Invalid coordinates received:", center);
+      hasCentered.current = true;
     }
-  }, [center, map]);
+  }, [center[0], center[1], map]);
   return null;
 }
 
