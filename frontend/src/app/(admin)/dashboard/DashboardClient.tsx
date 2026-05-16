@@ -5,9 +5,9 @@ import DashboardStats from '@/components/admin/DashboardStats';
 import Link from 'next/link';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell
 } from 'recharts';
 import { TrendingUp, Truck, ShoppingCart, Users, ChevronRight } from 'lucide-react';
+import { fetcher } from '@/lib/api';
 
 export default function DashboardClient() {
   const [data, setData] = useState<any>(null);
@@ -16,17 +16,10 @@ export default function DashboardClient() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('/api/dashboard/analytics/', {
-          credentials: 'include'
-        });
-        if (res.ok) {
-          const result = await res.json();
-          setData(result);
-        } else {
-          setError(res.status === 403 ? "Acceso denegado." : "Error de carga.");
-        }
-      } catch (err) {
-        setError("Error de conexión.");
+        const result = await fetcher('/dashboard/analytics/');
+        setData(result);
+      } catch (err: any) {
+        setError(err.message.includes("403") ? "Acceso denegado." : "Error de carga.");
       }
     };
     fetchStats();
@@ -67,7 +60,7 @@ export default function DashboardClient() {
           </div>
 
           <div className="h-[350px] w-full min-h-[350px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={data?.charts?.daily_sales || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
