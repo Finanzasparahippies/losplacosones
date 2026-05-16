@@ -50,35 +50,23 @@ export default function AdminDeliveryPage() {
 
   const fetchOrders = async () => {
     try {
-      const getCookie = (n: string) => `; ${document.cookie}`.split(`; ${n}=`).pop()?.split(';').shift() || '';
-      const stopsRes = await fetch('/api/shop/orders/', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
-      if (stopsRes.ok) {
-        const data = await stopsRes.json();
-        const activeStops = data.filter((o: any) => o.status === 'PENDING' || o.status === 'SHIPPED').map((o: any) => ({
-          id: o.id,
-          name: o.user_email,
-          address: o.delivery_address,
-          status: o.status,
-          latitude: o.latitude,
-          longitude: o.longitude
-        }));
-        setStops(activeStops);
-      }
+      const data = await fetcher('/shop/orders/');
+      const activeStops = data.filter((o: any) => o.status === 'PENDING' || o.status === 'SHIPPED').map((o: any) => ({
+        id: o.id,
+        name: o.user_email,
+        address: o.delivery_address,
+        status: o.status,
+        latitude: o.latitude,
+        longitude: o.longitude
+      }));
+      setStops(activeStops);
     } catch(e) {}
   };
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
-      await fetch(`/api/shop/orders/${orderId}/change_status/`, {
+      await fetcher(`/shop/orders/${orderId}/change_status/`, {
         method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
         body: JSON.stringify({ status: newStatus })
       });
       fetchOrders();
@@ -91,10 +79,8 @@ export default function AdminDeliveryPage() {
     if (isUpdatingRef.current) return;
     try {
       isUpdatingRef.current = true;
-      const getCookie = (n: string) => `; ${document.cookie}`.split(`; ${n}=`).pop()?.split(';').shift() || '';
-      await fetch('/api/delivery/location/update/', {
+      await fetcher('/delivery/location/update/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
         body: JSON.stringify({ latitude: lat, longitude: lng }),
       });
       
@@ -323,12 +309,8 @@ function DriverChatModal({ order, onClose }: { order: any, onClose: () => void }
     e.preventDefault();
     if (!newMessage.trim()) return;
     try {
-      await fetch(`/api/shop/orders/${order.id}/chat_messages/`, {
+      await fetcher(`/shop/orders/${order.id}/chat_messages/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
         body: JSON.stringify({ message: newMessage })
       });
       setNewMessage('');

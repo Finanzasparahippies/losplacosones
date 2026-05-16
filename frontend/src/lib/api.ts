@@ -12,14 +12,43 @@ export async function fetcher(endpoint: string, options: RequestInit = {}) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${endpoint}`, {
+  let res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
   });
 
   if (res.status === 401 && typeof window !== 'undefined') {
-    // Optional: Handle token refresh or logout
-    localStorage.removeItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      try {
+        const refreshRes = await fetch(`${API_URL}/users/token/refresh/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh: refreshToken }),
+        });
+        
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          localStorage.setItem('access_token', refreshData.access);
+          
+          // Retry request with new token
+          headers['Authorization'] = `Bearer ${refreshData.access}`;
+          res = await fetch(`${API_URL}${endpoint}`, {
+            ...options,
+            headers,
+          });
+        } else {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          window.location.href = '/login';
+        }
+      } catch (e) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+      }
+    } else {
+      localStorage.removeItem('access_token');
+    }
   }
 
   if (!res.ok) {
