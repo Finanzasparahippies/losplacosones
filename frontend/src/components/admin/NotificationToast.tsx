@@ -1,0 +1,47 @@
+'use client';
+
+import { Bell, X, ShoppingBag, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+
+export default function NotificationToast({ notification, onRemove }: any) {
+  return (
+    <div className="bg-ceviche-brown/90 border border-white/10 p-6 rounded-premium shadow-2xl backdrop-blur-xl animate-premium flex items-start gap-5 min-w-[320px] relative group overflow-hidden">
+      {/* Accent bar */}
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-ceviche-orange animate-pulse"></div>
+      
+      <div className="p-3 bg-ceviche-orange/10 text-ceviche-orange rounded-2xl">
+        <ShoppingBag size={24} />
+      </div>
+      
+      <div className="flex-1 pr-4">
+        <h3 className="font-black uppercase italic text-sm tracking-tight text-white mb-1">
+          {notification.message}
+        </h3>
+        <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">
+          {new Date(notification.timestamp).toLocaleTimeString()}
+        </p>
+        
+        <div className="mt-4 flex gap-4">
+          <Link 
+            href={`/dashboard/orders/${notification.orderId}`}
+            className="text-[9px] font-black uppercase text-ceviche-teal hover:text-white transition-colors flex items-center gap-1"
+          >
+            Ver Detalles <ExternalLink size={10} />
+          </Link>
+        </div>
+      </div>
+
+      <button 
+        onClick={onRemove}
+        className="text-white/20 hover:text-white transition-colors p-1"
+      >
+        <X size={16} />
+      </button>
+
+      {/* Background decoration */}
+      <div className="absolute -right-4 -bottom-4 text-white/[0.02] rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none">
+        <Bell size={80} />
+      </div>
+    </div>
+  );
+}

@@ -1,40 +1,26 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { auth } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/hooks/useNotifications';
+import NotificationToast from '@/components/admin/NotificationToast';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [authorized, setAuthorized] = useState(false);
+  const { user, loading, isAdmin } = useAuth();
+  const { notifications, removeNotification } = useNotifications(isAdmin);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-      try {
-        const user = await auth.getUser();
-        // Permite acceso solo a ADMIN, BUSINESS o ANALYST
-        const allowedRoles = ['ADMIN', 'BUSINESS', 'ANALYST'];
-        if (!allowedRoles.includes(user.role)) {
-          router.push('/menu'); // O a la página principal de clientes
-          return;
-        }
-        setAuthorized(true);
-      } catch (error) {
-        auth.logout();
-        router.push('/login');
-      }
-    };
-    checkAuth();
-  }, [router, pathname]);
+    if (!loading && !isAdmin) {
+      router.push('/login');
+    }
+  }, [loading, isAdmin, router]);
 
-  if (!authorized) {
+  if (loading || !isAdmin) {
     return (
       <div className="min-h-screen bg-ceviche-brown flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-ceviche-orange border-t-transparent rounded-full animate-spin"></div>
@@ -44,6 +30,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen bg-ceviche-brown text-ceviche-white">
+      {/* Container for Toasts */}
+      <div className="fixed top-8 right-8 z-[1000] flex flex-col gap-4 max-w-md">
+        {notifications.map(notif => (
+          <NotificationToast 
+            key={notif.id} 
+            notification={notif} 
+            onRemove={() => removeNotification(notif.id)} 
+          />
+        ))}
+      </div>
+
       {/* Sidebar Administrativo Premium */}
       <aside className="w-72 bg-ceviche-brown border-r border-ceviche-orange/30 flex flex-col fixed inset-y-0 shadow-2xl z-50">
         <div className="p-8 border-b border-white/10 bg-ceviche-brown/50 backdrop-blur-xl">

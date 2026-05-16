@@ -17,11 +17,14 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+import AddressSelector from '@/components/checkout/AddressSelector';
+
 export default function CheckoutPage() {
   const { cart, total, clearCart } = useCart();
   const { user } = useAuth();
   const router = useRouter();
   const [address, setAddress] = useState('');
+  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'TRANSFER'>('CASH');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -31,6 +34,11 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!user) {
       router.push('/login?redirect=/checkout');
+      return;
+    }
+
+    if (!address) {
+      alert("Por favor selecciona una dirección.");
       return;
     }
 
@@ -45,6 +53,8 @@ export default function CheckoutPage() {
         method: 'POST',
         body: JSON.stringify({
           delivery_address: address,
+          latitude: coords?.lat,
+          longitude: coords?.lng,
           payment_method: paymentMethod,
           items_data: itemsData
         })
@@ -123,12 +133,11 @@ export default function CheckoutPage() {
                 </div>
                 <h2 className="text-xl font-black uppercase italic tracking-tight">Punto de Entrega</h2>
               </div>
-              <textarea 
-                required
-                placeholder="Calle, número, colonia y referencias..."
-                className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white placeholder:text-white/20 focus:outline-none focus:border-ceviche-teal/50 transition-all h-32 resize-none"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
+              <AddressSelector 
+                onAddressChange={(addr, lat, lng) => {
+                  setAddress(addr);
+                  setCoords({ lat, lng });
+                }} 
               />
             </section>
 
