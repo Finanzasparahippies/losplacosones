@@ -1,6 +1,15 @@
 from django.db import models
 from django.conf import settings
 
+class Ingredient(models.Model):
+    name = models.CharField(max_length=100)
+    unit = models.CharField(max_length=20, help_text="Ej: kg, gr, l, pza")
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, help_text="Costo por unidad de medida")
+    stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.name} (${self.unit_cost}/{self.unit})"
+
 class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
@@ -9,8 +18,28 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
 
+    def get_cost(self):
+        """Calcula el costo total de producción basado en ingredientes"""
+        ingredients = self.ingredients.all()
+        total_cost = sum(item.ingredient.unit_cost * item.quantity for item in ingredients)
+        return total_cost
+
+    def get_margin(self):
+        """Calcula el margen de ganancia porcentual"""
+        cost = self.get_cost()
+        if cost == 0: return 0
+        return ((self.price - cost) / self.price) * 100
+
     def __str__(self):
         return self.name
+
+class ProductIngredient(models.Model):
+    product = models.ForeignKey(Product, related_name='ingredients', on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, help_text="Cantidad usada en este producto")
+
+    def __str__(self):
+        return f"{self.quantity} {self.ingredient.unit} of {self.ingredient.name} in {self.product.name}"
 
 class Order(models.Model):
     class Status(models.TextChoices):
