@@ -57,10 +57,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavLink href="/dashboard/orders" icon="📋" label="Órdenes" />
           <NavLink href="/dashboard/delivery" icon="🚚" label="Delivery GPS" />
           
-          <div className="pt-8 pb-2 px-3 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Backend</div>
+          <div className="pt-8 pb-2 px-3 text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Backend / Gestión</div>
           <NavLink href="/dashboard/system" label="Rendimiento" icon="⚙️" />
-          <NavLink href="/admin/newsletter/subscriber/" label="Suscriptores" icon="📧" isExternal />
-          <NavLink href="/admin/users/user/" label="Equipo" icon="🔐" isExternal />
+          <NavLink href="/dashboard/products" label="Productos" icon="📦" />
+          <NavLink href="/dashboard/users" label="Equipo y Usuarios" icon="👥" />
         </nav>
 
         <div className="p-6 bg-black/20 border-t border-white/5 mt-auto">

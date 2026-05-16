@@ -38,7 +38,7 @@ export default function OrdersManagementPage() {
 
   const updateStatus = async (orderId: number, newStatus: string) => {
     try {
-      await fetcher(`/shop/orders/${orderId}/`, {
+      await fetcher(`/shop/orders/${orderId}/change_status/`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus })
       });
@@ -51,7 +51,6 @@ export default function OrdersManagementPage() {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'PENDING': return 'bg-ceviche-orange/20 text-ceviche-orange border-ceviche-orange/30';
-      case 'PREPARING': return 'bg-ceviche-teal/20 text-ceviche-teal border-ceviche-teal/30';
       case 'SHIPPED': return 'bg-ceviche-lime/20 text-ceviche-lime border-ceviche-lime/30';
       case 'DELIVERED': return 'bg-white/10 text-white/40 border-white/10';
       default: return 'bg-white/5 text-white/60';
@@ -81,7 +80,7 @@ export default function OrdersManagementPage() {
 
       {loading ? (
         <div className="h-64 flex items-center justify-center text-ceviche-teal animate-pulse font-black uppercase tracking-widest">
-          Sincronizando con cocina...
+          Sincronizando...
         </div>
       ) : activeOrders.length === 0 ? (
         <div className="bg-white/5 border border-white/10 p-20 rounded-premium text-center">
@@ -158,18 +157,10 @@ export default function OrdersManagementPage() {
                 <div className="flex flex-col gap-3 min-w-[200px] w-full lg:w-auto">
                   {order.status === 'PENDING' && (
                     <button 
-                      onClick={() => updateStatus(order.id, 'PREPARING')}
-                      className="w-full bg-ceviche-teal text-ceviche-brown py-4 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Clock size={16} /> Empezar Cocina
-                    </button>
-                  )}
-                  {order.status === 'PREPARING' && (
-                    <button 
                       onClick={() => updateStatus(order.id, 'SHIPPED')}
                       className="w-full bg-ceviche-orange text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all flex items-center justify-center gap-2"
                     >
-                      <Truck size={16} /> Enviar a Reparto
+                      <Truck size={16} /> Empezar Entrega
                     </button>
                   )}
                   {order.status === 'SHIPPED' && (
@@ -180,7 +171,14 @@ export default function OrdersManagementPage() {
                       <CheckCircle size={16} /> Marcar Entregado
                     </button>
                   )}
-                  <button className="w-full border border-white/10 text-white/40 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-white/5 transition-all">
+                  <button 
+                    onClick={() => {
+                      if(window.confirm('¿Estás seguro de cancelar esta orden?')) {
+                        updateStatus(order.id, 'CANCELLED');
+                      }
+                    }}
+                    className="w-full border border-white/10 text-white/40 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-ceviche-red/20 hover:text-ceviche-red hover:border-ceviche-red/50 transition-all"
+                  >
                     Cancelar Orden
                   </button>
                 </div>

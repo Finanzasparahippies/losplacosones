@@ -35,14 +35,54 @@ export default function AdminDeliveryPage() {
           // Check if it matches known spoofed coords
           if (Math.abs(lat - COMMON_GHOST_LAT) < 0.001) setIsSpoofed(true);
         }
-        const stopsRes = await fetch('/api/delivery/stops/');
-        if (stopsRes.ok) setStops(await stopsRes.json());
+        await fetchOrders();
       } catch (error) {
         console.error("Error:", error);
       }
     };
     fetchData();
+    const interval = setInterval(fetchOrders, 10000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const getCookie = (n: string) => `; ${document.cookie}`.split(`; ${n}=`).pop()?.split(';').shift() || '';
+      const stopsRes = await fetch('/api/shop/orders/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+      if (stopsRes.ok) {
+        const data = await stopsRes.json();
+        const activeStops = data.filter((o: any) => o.status === 'PENDING' || o.status === 'SHIPPED').map((o: any) => ({
+          id: o.id,
+          name: o.user_email,
+          address: o.delivery_address,
+          status: o.status,
+          latitude: o.latitude,
+          longitude: o.longitude
+        }));
+        setStops(activeStops);
+      }
+    } catch(e) {}
+  };
+
+  const updateOrderStatus = async (orderId: number, newStatus: string) => {
+    try {
+      await fetch(`/api/shop/orders/${orderId}/change_status/`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      fetchOrders();
+    } catch (error) {
+      alert("Error al actualizar el estado");
+    }
+  };
 
   const updateServer = useCallback(async (lat: number, lng: number) => {
     if (isUpdatingRef.current) return;
@@ -93,7 +133,7 @@ export default function AdminDeliveryPage() {
   }, [mode, updateServer]);
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-8 animate-premium">
       <header className="flex justify-between items-center border-b border-white/5 pb-8">
         <div>
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter italic">
@@ -143,27 +183,47 @@ export default function AdminDeliveryPage() {
           />
           
           <div className="bg-ceviche-brown/40 p-8 rounded-premium border border-white/5 backdrop-blur-sm">
-            <h2 className="text-2xl font-black mb-8 text-ceviche-orange uppercase italic tracking-tight">Entregas Pendientes</h2>
+            <h2 className="text-2xl font-black mb-8 text-ceviche-orange uppercase italic tracking-tight">Ruta Activa</h2>
             <div className="space-y-4">
               {stops.length === 0 ? (
-                <p className="text-white/20 italic text-center py-8 font-bold uppercase tracking-widest">Sin paradas activas</p>
+                <p className="text-white/20 italic text-center py-8 font-bold uppercase tracking-widest">Sin entregas activas</p>
               ) : (
                 stops.map((stop: any) => (
                   <div key={stop.id} className="flex items-center justify-between p-6 bg-black/40 rounded-3xl border border-white/5 hover:border-ceviche-orange/40 transition-all">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-ceviche-orange/20 flex items-center justify-center text-ceviche-orange font-black">
-                        {stop.id}
+                        #{stop.id}
                       </div>
                       <div>
                         <p className="font-black text-white">{stop.name}</p>
                         <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">{stop.address}</p>
                       </div>
                     </div>
-                    <span className={`text-[9px] px-3 py-1 rounded-lg font-black uppercase tracking-widest ${
-                      stop.status === 'ARRIVED' ? 'bg-ceviche-lime text-ceviche-brown' : 'bg-white/10 text-white/40'
-                    }`}>
-                      {stop.status}
-                    </span>
+                    
+                    <div className="flex items-center gap-4">
+                      <span className={`text-[9px] px-3 py-1 rounded-lg font-black uppercase tracking-widest ${
+                        stop.status === 'SHIPPED' ? 'bg-ceviche-lime text-ceviche-brown' : 'bg-ceviche-orange/20 text-ceviche-orange'
+                      }`}>
+                        {stop.status}
+                      </span>
+                      
+                      {stop.status === 'PENDING' && (
+                         <button 
+                           onClick={() => updateOrderStatus(stop.id, 'SHIPPED')}
+                           className="bg-white/10 hover:bg-ceviche-lime hover:text-ceviche-brown text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl transition-colors"
+                         >
+                           Iniciar Entrega
+                         </button>
+                      )}
+                      {stop.status === 'SHIPPED' && (
+                         <button 
+                           onClick={() => updateOrderStatus(stop.id, 'DELIVERED')}
+                           className="bg-ceviche-lime/20 hover:bg-ceviche-lime hover:text-ceviche-brown text-ceviche-lime text-[9px] font-black uppercase px-4 py-2 rounded-xl transition-colors"
+                         >
+                           Entregado
+                         </button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
