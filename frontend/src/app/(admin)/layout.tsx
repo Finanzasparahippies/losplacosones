@@ -1,18 +1,20 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { auth } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationToast from '@/components/admin/NotificationToast';
+import { Menu, X } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, isAdmin } = useAuth();
   const { notifications, removeNotification } = useNotifications(isAdmin);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -42,7 +44,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Sidebar Administrativo Premium */}
-      <aside className="w-72 bg-ceviche-brown border-r border-ceviche-orange/30 flex flex-col fixed inset-y-0 shadow-2xl z-50">
+      {/* Overlay Móvil */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      
+      <aside className={`w-72 bg-ceviche-brown border-r border-ceviche-orange/30 flex flex-col fixed inset-y-0 shadow-2xl z-50 transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        {/* Mobile Close Button */}
+        <button 
+          onClick={() => setIsSidebarOpen(false)}
+          className="md:hidden absolute top-6 right-6 text-white/50 hover:text-white"
+        >
+          <X size={24} />
+        </button>
         <div className="p-8 border-b border-white/10 bg-ceviche-brown/50 backdrop-blur-xl">
           <Link href="/dashboard" className="group">
             <h1 className="text-3xl font-black text-ceviche-red uppercase tracking-tighter leading-none italic group-hover:scale-105 transition-transform">
@@ -83,8 +100,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Área de Contenido con margen para el Sidebar */}
-      <div className="flex-1 ml-72 min-h-screen relative bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-        <main className="animate-premium p-8">
+      <div className="flex-1 md:ml-72 min-h-screen relative bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+        
+        {/* Mobile Header */}
+        <div className="md:hidden sticky top-0 z-30 bg-ceviche-brown/80 backdrop-blur-xl border-b border-white/10 p-4 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center">
+            <span className="text-xl font-black text-ceviche-red uppercase tracking-tighter italic">PLACOSONES</span>
+          </Link>
+          <button onClick={() => setIsSidebarOpen(true)} className="text-white hover:text-ceviche-orange transition-colors">
+            <Menu size={24} />
+          </button>
+        </div>
+
+        <main className="animate-premium p-4 md:p-8 overflow-x-hidden">
           {children}
         </main>
       </div>

@@ -36,6 +36,7 @@ export default function Navbar() {
         {/* Links */}
         <div className="hidden md:flex gap-8 items-center">
           <NavLink href="/menu" active={pathname === '/menu'} label="Menú" />
+          <NavLink href="/profile/orders" active={pathname === '/profile/orders'} label="Mis Órdenes" />
           <NavLink href="/tracking" active={pathname === '/tracking'} label="Rastreo" />
           
           <div className="h-6 w-[1px] bg-white/10 mx-2"></div>
@@ -99,6 +100,7 @@ export default function Navbar() {
       {isMobileOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-3xl border-b border-white/10 p-8 flex flex-col gap-6 items-center shadow-2xl">
           <NavLink href="/menu" active={pathname === '/menu'} label="Menú" onClick={() => setIsMobileOpen(false)} />
+          <NavLink href="/profile/orders" active={pathname === '/profile/orders'} label="Mis Órdenes" onClick={() => setIsMobileOpen(false)} />
           <NavLink href="/tracking" active={pathname === '/tracking'} label="Rastreo" onClick={() => setIsMobileOpen(false)} />
           
           <Link href="/checkout" className="relative p-2 mt-2" onClick={() => setIsMobileOpen(false)}>

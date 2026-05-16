@@ -1,6 +1,6 @@
 'use client';
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useState } from 'react';
@@ -17,6 +17,12 @@ const truckIcon = L.icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/1048/1048329.png', // Food truck icon
   iconSize: [40, 40],
   iconAnchor: [20, 40],
+});
+
+const clientIcon = L.icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3673/3673199.png', // Delivery home icon
+  iconSize: [36, 36],
+  iconAnchor: [18, 36],
 });
 
 interface Location {
@@ -55,19 +61,25 @@ export default function TrackingMap({
   vehicleLocation, 
   stops = [],
   isDraggable = false,
-  onMarkerDrag
+  onMarkerDrag,
+  clientLocation
 }: { 
   vehicleLocation?: Location, 
   stops?: Stop[],
   isDraggable?: boolean,
-  onMarkerDrag?: (lat: number, lng: number) => void
+  onMarkerDrag?: (lat: number, lng: number) => void,
+  clientLocation?: Location
 }) {
   console.log("📍 TrackingMap Received Location:", vehicleLocation);
   
   const defaultCenter: [number, number] = [33.4484, -112.0740]; // Phoenix, AZ
+  
+  // Si hay location del cliente pero no de vehiculo, centrar en el cliente. Si ambos, en vehiculo.
   const center: [number, number] = vehicleLocation 
     ? [Number(vehicleLocation.latitude), Number(vehicleLocation.longitude)] 
-    : defaultCenter;
+    : clientLocation 
+      ? [Number(clientLocation.latitude), Number(clientLocation.longitude)]
+      : defaultCenter;
 
   const eventHandlers = {
     dragend(e: any) {
@@ -107,7 +119,41 @@ export default function TrackingMap({
                 </div>
               </Popup>
             </Marker>
-            <ChangeView center={[Number(vehicleLocation.latitude), Number(vehicleLocation.longitude)]} />
+            {!clientLocation && <ChangeView center={[Number(vehicleLocation.latitude), Number(vehicleLocation.longitude)]} />}
+          </>
+        )}
+
+        {clientLocation && (
+          <>
+            <Marker 
+              position={[Number(clientLocation.latitude), Number(clientLocation.longitude)]} 
+              icon={clientIcon}
+            >
+              <Popup className="premium-popup">
+                <div className="p-2 font-black uppercase italic text-ceviche-teal">
+                  📍 Tu Ubicación de Entrega
+                </div>
+              </Popup>
+            </Marker>
+            <Circle 
+              center={[Number(clientLocation.latitude), Number(clientLocation.longitude)]} 
+              radius={200}
+              pathOptions={{ color: '#00F0FF', fillColor: '#00F0FF', fillOpacity: 0.1, dashArray: '4 8' }}
+            />
+            {vehicleLocation && (
+              <Polyline 
+                positions={[
+                  [Number(vehicleLocation.latitude), Number(vehicleLocation.longitude)],
+                  [Number(clientLocation.latitude), Number(clientLocation.longitude)]
+                ]}
+                pathOptions={{ color: '#FF4500', weight: 4, dashArray: '10 10', className: 'animate-pulse' }}
+              />
+            )}
+            {/* Si tenemos ambos o solo cliente, centramos al medio o al cliente */}
+            <ChangeView center={[
+              vehicleLocation ? (Number(vehicleLocation.latitude) + Number(clientLocation.latitude)) / 2 : Number(clientLocation.latitude),
+              vehicleLocation ? (Number(vehicleLocation.longitude) + Number(clientLocation.longitude)) / 2 : Number(clientLocation.longitude)
+            ]} />
           </>
         )}
 
