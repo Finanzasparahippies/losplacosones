@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { fetcher } from '@/lib/api';
-import { Users, Shield, ShieldAlert, Key, Mail, Phone, MapPin, CheckCircle2 } from 'lucide-react';
+import { Users, Shield, ShieldAlert, Key, Mail, Phone, MapPin, CheckCircle2, User } from 'lucide-react';
 
 export default function UsersManagementPage() {
   const [users, setUsers] = useState<any[]>([]);

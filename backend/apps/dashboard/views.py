@@ -3,17 +3,17 @@ import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
-from apps.shop.models import Order, Product
-from apps.newsletter.models import Subscriber
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-
-User = get_user_model()
-
 from datetime import datetime, timedelta
 from apps.shop.models import Order, Product, Ingredient
 from .models import Expense, FinancialTarget
 from django.utils import timezone
+import psutil
+import time
+from django.db import connection
+
+User = get_user_model()
 
 class AnalyticsOverview(APIView):
     permission_classes = [IsAdminUser]
@@ -24,12 +24,12 @@ class AnalyticsOverview(APIView):
         start_date = end_date - timedelta(days=30)
         
         # 2. Financial Metrics
-        paid_orders = Order.objects.filter(status='PAID')
-        gross_sales = paid_orders.aggregate(Sum('total'))['total__sum'] or 0
+        valid_orders = Order.objects.exclude(status='CANCELLED')
+        gross_sales = valid_orders.aggregate(Sum('total'))['total__sum'] or 0
         
         # Calculate production costs (COGS - Cost of Goods Sold)
         total_production_cost = 0
-        for order in paid_orders:
+        for order in valid_orders:
             for item in order.items.all():
                 total_production_cost += item.product.get_cost() * item.quantity
         
@@ -46,7 +46,7 @@ class AnalyticsOverview(APIView):
         daily_stats = []
         for i in range(30):
             date = start_date + timedelta(days=i)
-            day_orders = paid_orders.filter(created_at__date=date.date())
+            day_orders = valid_orders.filter(created_at__date=date.date())
             day_sales = day_orders.aggregate(Sum('total'))['total__sum'] or 0
             daily_stats.append({
                 'date': date.strftime('%d %b'),
@@ -72,10 +72,6 @@ class AnalyticsOverview(APIView):
             'status': 'success'
         }
         return Response(metrics)
-
-import psutil
-import time
-from django.db import connection
 
 class SystemMetricsView(APIView):
     permission_classes = [IsAdminUser]
