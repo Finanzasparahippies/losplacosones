@@ -36,6 +36,28 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response({'status': order.status})
         return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def cancel_order(self, request, pk=None):
+        from django.utils import timezone
+        import datetime
+        order = self.get_object()
+        
+        # User must own the order
+        if order.user != request.user and not request.user.is_staff:
+            return Response({'error': 'No permission'}, status=status.HTTP_403_FORBIDDEN)
+            
+        # Check time limit (10 minutes)
+        time_diff = timezone.now() - order.created_at
+        if time_diff > datetime.timedelta(minutes=10) and not request.user.is_staff:
+            return Response({'error': 'Han pasado más de 10 minutos desde la creación del pedido.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if order.status == Order.Status.DELIVERED:
+            return Response({'error': 'El pedido ya fue entregado.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        order.status = Order.Status.CANCELLED
+        order.save()
+        return Response({'status': order.status})
+
     @action(detail=True, methods=['get', 'post'])
     def chat_messages(self, request, pk=None):
         order = self.get_object()

@@ -19,12 +19,13 @@ export default function ActiveOrderWidget() {
 
     const checkActiveOrder = async () => {
       try {
+        if (!localStorage.getItem('access_token')) return;
         const orders = await fetcher('/shop/orders/');
         const active = orders.find((o: any) => o.status === 'PENDING' || o.status === 'SHIPPED');
         setActiveOrder(active || null);
         if (!active) setIsOpen(false);
       } catch (e) {
-        console.error("Error checking active order", e);
+        // If auth fails, don't spam errors
       }
     };
 
@@ -80,6 +81,29 @@ export default function ActiveOrderWidget() {
     }
   };
 
+  const handleCancelOrder = async () => {
+    if (!activeOrder) return;
+    if (!confirm("¿Estás seguro de que deseas cancelar este pedido? Solo puedes hacerlo en los primeros 10 minutos.")) return;
+    
+    try {
+      const res = await fetch(`/api/shop/orders/${activeOrder.id}/cancel_order/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "No se pudo cancelar el pedido.");
+        return;
+      }
+      setActiveOrder(null);
+      setIsOpen(false);
+    } catch (e) {
+      alert("Error de conexión al cancelar.");
+    }
+  };
+
   if (!user || user.is_staff || !activeOrder) return null;
 
   return (
@@ -93,8 +117,13 @@ export default function ActiveOrderWidget() {
                 {activeOrder.status === 'SHIPPED' ? <Navigation size={14} className="text-ceviche-teal" /> : <Package size={14} className="text-ceviche-orange" />}
                 Orden #{activeOrder.id}
               </h4>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">
+              <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold flex items-center gap-2">
                 {activeOrder.status === 'SHIPPED' ? 'En Camino' : 'Preparando'}
+                {activeOrder.status === 'PENDING' && (
+                  <button onClick={handleCancelOrder} className="text-ceviche-red hover:underline ml-2">
+                    Cancelar
+                  </button>
+                )}
               </p>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white/40 hover:text-white transition-colors">

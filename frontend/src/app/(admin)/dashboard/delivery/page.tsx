@@ -325,7 +325,7 @@ function DriverChatModal({ order, onClose }: { order: any, onClose: () => void }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
       <div className="bg-black/90 border border-white/10 w-full max-w-md rounded-premium shadow-2xl overflow-hidden flex flex-col h-[500px]">
         <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
           <div>
