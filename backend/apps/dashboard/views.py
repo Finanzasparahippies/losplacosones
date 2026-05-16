@@ -21,7 +21,7 @@ class AnalyticsOverview(APIView):
     def get(self, request):
         # 1. Date range for charts (Last 30 days)
         end_date = timezone.now()
-        start_date = end_date - timedelta(days=30)
+        start_date = end_date - timedelta(days=29)
         
         # 2. Financial Metrics
         valid_orders = Order.objects.exclude(status='CANCELLED')
