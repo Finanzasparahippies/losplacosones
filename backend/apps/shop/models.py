@@ -79,7 +79,7 @@ class OrderItem(models.Model):
 
 class ChatMessage(models.Model):
     order = models.ForeignKey(Order, related_name='messages', on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
