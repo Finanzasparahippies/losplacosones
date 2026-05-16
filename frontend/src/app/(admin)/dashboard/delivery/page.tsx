@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import GPSManager from '@/components/delivery/GPSManager';
+import { MessageCircle, X, Send } from 'lucide-react';
+import { fetcher } from '@/lib/api';
 
 // Dynamic import for Leaflet
 const TrackingMap = dynamic(() => import('@/components/delivery/TrackingMap'), {
@@ -18,6 +20,7 @@ export default function AdminDeliveryPage() {
   const [stops, setStops] = useState([]);
   const [mode, setMode] = useState<TrackingMode>('OFF');
   const [isSpoofed, setIsSpoofed] = useState(false);
+  const [chatOrder, setChatOrder] = useState<any>(null);
 
   // Reference for "Common Ghost Coordinates" to warn but not necessarily block
   const COMMON_GHOST_LAT = 28.7381;
@@ -223,6 +226,12 @@ export default function AdminDeliveryPage() {
                            Entregado
                          </button>
                       )}
+                      <button 
+                        onClick={() => setChatOrder(stop)}
+                        className="bg-ceviche-teal/20 text-ceviche-teal hover:bg-ceviche-teal hover:text-black w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
+                      >
+                        <MessageCircle size={14} />
+                      </button>
                     </div>
                   </div>
                 ))
@@ -248,6 +257,13 @@ export default function AdminDeliveryPage() {
           </div>
         </div>
       </div>
+      
+      {chatOrder && (
+        <DriverChatModal 
+          order={chatOrder} 
+          onClose={() => setChatOrder(null)} 
+        />
+      )}
     </div>
   );
 }
@@ -264,5 +280,100 @@ function ModeButton({ active, onClick, label }: { active: boolean, onClick: () =
     >
       {label}
     </button>
+  );
+}
+
+function DriverChatModal({ order, onClose }: { order: any, onClose: () => void }) {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const msgs = await fetcher(`/shop/orders/${order.id}/chat_messages/`);
+        setMessages(msgs);
+      } catch (e) {}
+    };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
+  }, [order.id]);
+
+  useEffect(() => {
+    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+    try {
+      await fetch(`/api/shop/orders/${order.id}/chat_messages/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({ message: newMessage })
+      });
+      setNewMessage('');
+      const msgs = await fetcher(`/shop/orders/${order.id}/chat_messages/`);
+      setMessages(msgs);
+    } catch (e) {
+      alert("Error enviando mensaje");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-black/90 border border-white/10 w-full max-w-md rounded-premium shadow-2xl overflow-hidden flex flex-col h-[500px]">
+        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+          <div>
+            <h3 className="font-black text-white uppercase tracking-tight">Chat - Orden #{order.id}</h3>
+            <p className="text-[10px] text-white/50 uppercase tracking-widest">{order.name}</p>
+          </div>
+          <button onClick={onClose} className="text-white/40 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.map((msg) => {
+            const isMine = msg.is_staff;
+            return (
+              <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] rounded-2xl p-3 ${isMine ? 'bg-ceviche-teal text-black rounded-br-none' : 'bg-white/10 text-white rounded-bl-none'}`}>
+                  {!isMine && (
+                    <p className="text-[9px] font-black uppercase opacity-60 mb-1">👤 Cliente</p>
+                  )}
+                  <p className="text-sm font-medium">{msg.message}</p>
+                  <p className={`text-[8px] font-bold text-right mt-1 opacity-50`}>
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10 bg-white/5 flex gap-2">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Escribe un mensaje al cliente..."
+            className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-ceviche-teal transition-colors"
+          />
+          <button 
+            type="submit" 
+            disabled={!newMessage.trim()}
+            className="bg-ceviche-teal text-black p-3 rounded-xl disabled:opacity-50 hover:scale-105 transition-transform"
+          >
+            <Send size={18} />
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

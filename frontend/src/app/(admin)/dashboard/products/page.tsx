@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { fetcher } from '@/lib/api';
-import { Package, Plus, Edit2, Trash2, Tag, Archive } from 'lucide-react';
+import { Package, Plus, Edit2, Trash2, Tag, Archive, X } from 'lucide-react';
 
 export default function ProductsManagementPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const fetchProducts = async () => {
     try {
@@ -48,7 +50,11 @@ export default function ProductsManagementPage() {
             Control de Inventario y Precios
           </p>
         </div>
-        <button className="bg-ceviche-teal text-ceviche-brown px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-ceviche-teal/20">
+        </div>
+        <button 
+          onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
+          className="bg-ceviche-teal text-ceviche-brown px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-ceviche-teal/20"
+        >
           <Plus size={16} /> Nuevo Producto
         </button>
       </header>
@@ -96,7 +102,10 @@ export default function ProductsManagementPage() {
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    <button className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors">
+                    <button 
+                      onClick={() => { setEditingProduct(product); setIsModalOpen(true); }}
+                      className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                    >
                       <Edit2 size={14} />
                     </button>
                     <button 
@@ -112,6 +121,98 @@ export default function ProductsManagementPage() {
           ))}
         </div>
       )}
+
+      {isModalOpen && (
+        <ProductModal 
+          product={editingProduct} 
+          onClose={() => setIsModalOpen(false)} 
+          onRefresh={fetchProducts} 
+        />
+      )}
+    </div>
+  );
+}
+
+function ProductModal({ product, onClose, onRefresh }: { product: any, onClose: () => void, onRefresh: () => void }) {
+  const [formData, setFormData] = useState({
+    name: product?.name || '',
+    description: product?.description || '',
+    price: product?.price || '',
+    stock: product?.stock || 0,
+    image: product?.image || ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const method = product ? 'PATCH' : 'POST';
+      const url = product ? `/api/shop/products/${product.id}/` : '/api/shop/products/';
+      
+      const payload = { ...formData };
+      if (!payload.image) delete payload.image; // Don't send empty image URL string to backend if it expects a file or url
+
+      await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      onRefresh();
+      onClose();
+    } catch (e) {
+      alert("Error al guardar el producto");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium">
+      <div className="bg-black/90 border border-white/10 w-full max-w-lg rounded-premium shadow-2xl overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+          <h3 className="font-black text-white uppercase tracking-tight text-xl">
+            {product ? 'Editar Producto' : 'Nuevo Producto'}
+          </h3>
+          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Nombre</label>
+              <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Precio ($)</label>
+                <input required type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Stock Inicial</label>
+                <input required type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: parseInt(e.target.value) || 0})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Descripción</label>
+              <textarea rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors resize-none"></textarea>
+            </div>
+          </div>
+          
+          <div className="pt-6 border-t border-white/10 flex justify-end gap-4">
+            <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl font-black uppercase text-xs text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" className="bg-ceviche-teal text-black px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform shadow-lg shadow-ceviche-teal/20">
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

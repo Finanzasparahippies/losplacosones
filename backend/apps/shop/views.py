@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from .models import Product, Order
-from .serializers import ProductSerializer, OrderSerializer
+from .serializers import ProductSerializer, OrderSerializer, ChatMessageSerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -35,6 +35,30 @@ class OrderViewSet(viewsets.ModelViewSet):
             order.save()
             return Response({'status': order.status})
         return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get', 'post'])
+    def chat_messages(self, request, pk=None):
+        order = self.get_object()
+        
+        # Security check: Only the order owner or a staff member can access the chat
+        if request.user != order.user and not request.user.is_staff:
+            return Response({'error': 'No permission to access this chat'}, status=status.HTTP_403_FORBIDDEN)
+            
+        if request.method == 'GET':
+            messages = order.messages.all()
+            serializer = ChatMessageSerializer(messages, many=True)
+            return Response(serializer.data)
+            
+        if request.method == 'POST':
+            # Block new messages if order is Delivered or Cancelled
+            if order.status in [Order.Status.DELIVERED, Order.Status.CANCELLED]:
+                return Response({'error': 'Chat is closed for this order'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            serializer = ChatMessageSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(order=order, sender=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

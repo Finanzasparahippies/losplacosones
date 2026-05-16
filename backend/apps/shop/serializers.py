@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Order, OrderItem
+from .models import Product, Order, OrderItem, ChatMessage
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,3 +45,12 @@ class OrderSerializer(serializers.ModelSerializer):
             )
         
         return order
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    sender_name = serializers.ReadOnlyField(source='sender.username')
+    is_staff = serializers.ReadOnlyField(source='sender.is_staff')
+
+    class Meta:
+        model = ChatMessage
+        fields = ['id', 'order', 'sender', 'sender_name', 'is_staff', 'message', 'created_at']
+        read_only_fields = ['order', 'sender', 'sender_name', 'is_staff', 'created_at']

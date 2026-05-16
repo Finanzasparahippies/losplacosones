@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { fetcher } from '@/lib/api';
-import { Users, Shield, ShieldAlert, Key, Mail, Phone, MapPin, CheckCircle2, User } from 'lucide-react';
+import { Users, Shield, ShieldAlert, Key, Mail, Phone, MapPin, CheckCircle2, User, Edit2, X } from 'lucide-react';
 
 export default function UsersManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
 
   const fetchUsers = async () => {
     try {
@@ -83,7 +85,7 @@ export default function UsersManagementPage() {
                     {user.email.substring(0, 2)}
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-white">{user.name || 'Sin Nombre'}</h3>
+                    <h3 className="text-lg font-black text-white">{user.username || user.name || 'Sin Nombre'}</h3>
                     <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest mt-1">
                       ID: {user.id}
                     </p>
@@ -111,12 +113,6 @@ export default function UsersManagementPage() {
                     <span>{user.phone}</span>
                   </div>
                 )}
-                {user.address && (
-                  <div className="flex items-center gap-3 text-white/70 text-xs">
-                    <MapPin size={14} className="text-white/30" />
-                    <span className="truncate">{user.address}</span>
-                  </div>
-                )}
               </div>
 
               <div className="pt-4 border-t border-white/5 flex items-center justify-between">
@@ -124,22 +120,101 @@ export default function UsersManagementPage() {
                   Se unió: {new Date(user.date_joined).toLocaleDateString()}
                 </span>
                 
-                <button 
-                  onClick={() => toggleStaffStatus(user.id, user.is_staff)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    user.is_staff 
-                      ? 'bg-ceviche-red/10 text-ceviche-red hover:bg-ceviche-red/20' 
-                      : 'bg-ceviche-teal/10 text-ceviche-teal hover:bg-ceviche-teal/20'
-                  }`}
-                >
-                  {user.is_staff ? <ShieldAlert size={14} /> : <Key size={14} />}
-                  {user.is_staff ? 'Quitar Admin' : 'Hacer Admin'}
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => { setEditingUser(user); setIsModalOpen(true); }}
+                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button 
+                    onClick={() => toggleStaffStatus(user.id, user.is_staff)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      user.is_staff 
+                        ? 'bg-ceviche-red/10 text-ceviche-red hover:bg-ceviche-red/20' 
+                        : 'bg-ceviche-teal/10 text-ceviche-teal hover:bg-ceviche-teal/20'
+                    }`}
+                  >
+                    {user.is_staff ? <ShieldAlert size={14} /> : <Key size={14} />}
+                    {user.is_staff ? 'Quitar Admin' : 'Hacer Admin'}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {isModalOpen && (
+        <UserModal 
+          user={editingUser} 
+          onClose={() => setIsModalOpen(false)} 
+          onRefresh={fetchUsers} 
+        />
+      )}
+    </div>
+  );
+}
+
+function UserModal({ user, onClose, onRefresh }: { user: any, onClose: () => void, onRefresh: () => void }) {
+  const [formData, setFormData] = useState({
+    username: user?.username || user?.name || '',
+    phone: user?.phone || '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await fetch(`/api/users/manage/${user.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(formData)
+      });
+      onRefresh();
+      onClose();
+    } catch (e) {
+      alert("Error al actualizar usuario");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium">
+      <div className="bg-black/90 border border-white/10 w-full max-w-md rounded-premium shadow-2xl overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+          <h3 className="font-black text-white uppercase tracking-tight text-xl">
+            Editar Usuario
+          </h3>
+          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Nombre / Username</label>
+              <input required type="text" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
+            </div>
+            
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Teléfono</label>
+              <input type="text" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-ceviche-teal transition-colors" />
+            </div>
+          </div>
+          
+          <div className="pt-6 border-t border-white/10 flex justify-end gap-4">
+            <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl font-black uppercase text-xs text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" className="bg-ceviche-teal text-black px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform shadow-lg shadow-ceviche-teal/20">
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
