@@ -17,6 +17,36 @@ class ProductViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAdminUser]
         return [permission() for permission in permission_classes]
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def update_recipe(self, request, pk=None):
+        product = self.get_object()
+        ingredients_data = request.data.get('ingredients', [])
+        
+        # Clear existing recipe
+        product.ingredients.all().delete()
+        
+        # Build new recipe
+        for item in ingredients_data:
+            from .models import Ingredient, ProductIngredient
+            try:
+                ingredient = Ingredient.objects.get(id=item['ingredient'])
+                ProductIngredient.objects.create(
+                    product=product,
+                    ingredient=ingredient,
+                    quantity=item['quantity']
+                )
+            except Ingredient.DoesNotExist:
+                pass
+                
+        return Response({'status': 'Recipe updated', 'cost': product.get_cost(), 'margin': product.get_margin()})
+
+class IngredientViewSet(viewsets.ModelViewSet):
+    from .models import Ingredient
+    queryset = Ingredient.objects.all()
+    from .serializers import IngredientSerializer
+    serializer_class = IngredientSerializer
+    permission_classes = [IsAdminUser]
+
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer

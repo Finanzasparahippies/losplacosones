@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Truck, ShoppingCart, Users, ChevronRight } from 'lucide-react';
+import { TrendingUp, Truck, ShoppingCart, Users, ChevronRight, PackageSearch } from 'lucide-react';
 import { fetcher } from '@/lib/api';
 
 export default function DashboardClient() {
@@ -107,6 +107,13 @@ export default function DashboardClient() {
           </h2>
           
           <div className="grid grid-cols-1 gap-4">
+            <QuickActionLink 
+              href="/dashboard/inventory" 
+              title="Bóveda de Insumos" 
+              subtitle="Control de Costos e Inventario Base" 
+              icon={PackageSearch} 
+              color="orange" 
+            />
             <QuickActionLink 
               href="/dashboard/delivery" 
               title="Logística" 

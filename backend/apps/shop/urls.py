@@ -1,9 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProductViewSet, OrderViewSet, geocode_proxy, reverse_geocode_proxy
+from .views import ProductViewSet, OrderViewSet, IngredientViewSet, geocode_proxy, reverse_geocode_proxy
 
 router = DefaultRouter()
 router.register(r'products', ProductViewSet)
+router.register(r'ingredients', IngredientViewSet)
 router.register(r'orders', OrderViewSet)
 
 urlpatterns = [

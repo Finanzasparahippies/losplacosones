@@ -1,10 +1,34 @@
 from rest_framework import serializers
-from .models import Product, Order, OrderItem, ChatMessage
+from .models import Product, Order, OrderItem, ChatMessage, Ingredient, ProductIngredient
+
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'name', 'unit', 'unit_cost', 'stock']
+
+class ProductIngredientSerializer(serializers.ModelSerializer):
+    ingredient_name = serializers.ReadOnlyField(source='ingredient.name')
+    unit = serializers.ReadOnlyField(source='ingredient.unit')
+    unit_cost = serializers.ReadOnlyField(source='ingredient.unit_cost')
+
+    class Meta:
+        model = ProductIngredient
+        fields = ['id', 'ingredient', 'ingredient_name', 'unit', 'unit_cost', 'quantity']
 
 class ProductSerializer(serializers.ModelSerializer):
+    ingredients = ProductIngredientSerializer(many=True, read_only=True)
+    cost = serializers.SerializerMethodField()
+    margin = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'image', 'stock']
+        fields = ['id', 'name', 'description', 'price', 'image', 'stock', 'ingredients', 'cost', 'margin']
+
+    def get_cost(self, obj):
+        return obj.get_cost()
+
+    def get_margin(self, obj):
+        return obj.get_margin()
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
