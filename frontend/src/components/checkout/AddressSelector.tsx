@@ -1,24 +1,18 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import dynamic from 'next/dynamic';
 import { MapPin, Search, Navigation } from 'lucide-react';
-import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icons in Leaflet with Next.js
-const icon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-
-// Dynamically import Map components
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
-const useMap = dynamic(() => import('react-leaflet').then(mod => mod.useMap), { ssr: false });
+// Componente para manejar el cambio de vista del mapa
+function ChangeView({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (map) map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
 
 interface AddressSelectorProps {
   onAddressChange: (address: string, lat: number, lng: number) => void;
@@ -29,15 +23,18 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [markerIcon, setMarkerIcon] = useState<any>(null);
 
-  // Function to move map to current position
-  function ChangeView({ center }: { center: [number, number] }) {
-    const map = (useMap as any)();
-    useEffect(() => {
-      if (map) map.setView(center, 16);
-    }, [center, map]);
-    return null;
-  }
+  // Inicializar Leaflet solo en el cliente
+  useEffect(() => {
+    const L = require('leaflet');
+    setMarkerIcon(L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+    }));
+  }, []);
 
   const handleSearch = async (query: string) => {
     setAddress(query);
@@ -120,12 +117,14 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
-          <Marker 
-            position={position} 
-            draggable={true} 
-            icon={icon}
-            eventHandlers={{ dragend: handleMarkerDrag }}
-          />
+          {markerIcon && (
+            <Marker 
+              position={position} 
+              draggable={true} 
+              icon={markerIcon}
+              eventHandlers={{ dragend: handleMarkerDrag }}
+            />
+          )}
           <ChangeView center={position} />
         </MapContainer>
         

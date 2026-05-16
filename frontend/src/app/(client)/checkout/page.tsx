@@ -17,7 +17,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-import AddressSelector from '@/components/checkout/AddressSelector';
+import dynamic from 'next/dynamic';
+
+const AddressSelector = dynamic(() => import('@/components/checkout/AddressSelector'), { 
+  ssr: false,
+  loading: () => <div className="h-[300px] w-full bg-white/5 animate-pulse rounded-2xl" />
+});
 
 export default function CheckoutPage() {
   const { cart, total, clearCart } = useCart();
