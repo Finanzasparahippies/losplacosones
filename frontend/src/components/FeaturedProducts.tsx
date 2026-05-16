@@ -18,7 +18,7 @@ export default function FeaturedProducts() {
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const apiUrl = process.env.BACKEND_URL || '/api';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
         const response = await fetch(`${apiUrl}/shop/products/`);
         if (response.ok) {
           const data = await response.json();
