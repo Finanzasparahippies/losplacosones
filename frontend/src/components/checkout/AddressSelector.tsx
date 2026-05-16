@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { MapPin, Search, Navigation } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { fetcher } from '@/lib/api';
 
 // Componente para manejar el cambio de vista del mapa
 function ChangeView({ center }: { center: [number, number] }) {
@@ -24,6 +25,7 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [markerIcon, setMarkerIcon] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Inicializar Leaflet solo en el cliente
   useEffect(() => {
@@ -36,8 +38,6 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
     }));
   }, []);
 
-  const [searchTerm, setSearchTerm] = useState('');
-
   // Debounced search effect
   useEffect(() => {
     if (searchTerm.length < 3) {
@@ -48,24 +48,15 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
     const timeoutId = setTimeout(async () => {
       try {
         setLoading(true);
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=5`,
-          {
-            headers: {
-              'User-Agent': 'LosPlacosones-App/1.0',
-              'Accept-Language': 'es' // Prefer results in Spanish
-            }
-          }
-        );
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
+        // Usar nuestro proxy del backend para evitar CORS
+        const data = await fetcher(`/shop/geocode/?q=${encodeURIComponent(searchTerm)}`);
         setSearchResults(data);
       } catch (e) {
         console.error("Geocoding error", e);
       } finally {
         setLoading(false);
       }
-    }, 800); // Higher debounce for safety
+    }, 800);
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
@@ -88,18 +79,10 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
     const latLng = e.target.getLatLng();
     setPosition([latLng.lat, latLng.lng]);
     
-    // Reverse geocode
+    // Reverse geocode via proxy
     try {
       setLoading(true);
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latLng.lat}&lon=${latLng.lng}`,
-        {
-          headers: {
-            'User-Agent': 'LosPlacosones-App/1.0'
-          }
-        }
-      );
-      const data = await res.json();
+      const data = await fetcher(`/shop/reverse-geocode/?lat=${latLng.lat}&lon=${latLng.lng}`);
       setAddress(data.display_name);
       onAddressChange(data.display_name, latLng.lat, latLng.lng);
     } catch (e) {

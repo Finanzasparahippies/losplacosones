@@ -1,5 +1,8 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+import requests
+from rest_framework import viewsets, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 from .models import Product, Order
 from .serializers import ProductSerializer, OrderSerializer
 
@@ -13,7 +16,39 @@ class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     
     def get_queryset(self):
-        # Users should only see their own orders unless they are staff
         if self.request.user.is_staff:
             return Order.objects.all()
-        return Order.objects.filter(user=self.request.user)
+        return Order.objects.filter(user=self.request.user).order_by('-created_at')
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def geocode_proxy(request):
+    query = request.GET.get('q')
+    if not query:
+        return Response({'error': 'No query provided'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    url = f"https://nominatim.openstreetmap.org/search?format=json&q={query}&limit=5"
+    headers = {'User-Agent': 'LosPlacosones-App/1.0'}
+    
+    try:
+        response = requests.get(url, headers=headers)
+        return Response(response.json())
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def reverse_geocode_proxy(request):
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
+    if not lat or not lon:
+        return Response({'error': 'Missing coordinates'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}"
+    headers = {'User-Agent': 'LosPlacosones-App/1.0'}
+    
+    try:
+        response = requests.get(url, headers=headers)
+        return Response(response.json())
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
