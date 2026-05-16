@@ -113,8 +113,6 @@ export default function ProductsManagementPage() {
                     </span>
                   </div>
                 </div>
-                    </span>
-                  </div>
                   <div className="flex gap-2">
                     <button 
                       onClick={() => { setEditingProduct(product); setIsModalOpen(true); }}
