@@ -17,7 +17,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Order.objects.all()
+            return Order.objects.all().order_by('-created_at')
         return Order.objects.filter(user=self.request.user).order_by('-created_at')
 
 @api_view(['GET'])

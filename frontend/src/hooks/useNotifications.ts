@@ -56,7 +56,7 @@ export function useNotifications(isAdmin: boolean) {
     // Initialize lastOrderId
     pollOrders();
 
-    const interval = setInterval(pollOrders, 10000); // Poll every 10 seconds
+    const interval = setInterval(pollOrders, 5000); // Poll every 5 seconds for near real-time
     return () => clearInterval(interval);
   }, [isAdmin]);
 
