@@ -19,10 +19,24 @@ const truckIcon = L.icon({
   iconAnchor: [20, 40],
 });
 
-const clientIcon = L.icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3673/3673199.png', // Delivery home icon
-  iconSize: [36, 36],
-  iconAnchor: [18, 36],
+const clientIcon = L.divIcon({
+  html: `
+    <div class="relative w-10 h-10 flex items-center justify-center">
+      <!-- Ring ripple -->
+      <span class="absolute inline-flex h-8 w-8 rounded-full bg-[#c5e65c] opacity-35 animate-ping"></span>
+      <!-- Main circle -->
+      <div class="relative w-8 h-8 rounded-full bg-[#c5e65c] border-2 border-[#332c26] shadow-[0_0_15px_rgba(197,230,92,0.8)] flex items-center justify-center">
+        <!-- SVG Home -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#332c26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+    </div>
+  `,
+  className: 'custom-client-icon',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 });
 
 interface Location {
