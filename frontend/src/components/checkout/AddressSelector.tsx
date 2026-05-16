@@ -136,24 +136,33 @@ export default function AddressSelector({ onAddressChange }: AddressSelectorProp
               </div>
             ) : searchResults.length > 0 ? (
               <div className="max-h-[280px] overflow-y-auto">
-                {searchResults.map((res, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => selectResult(res)}
-                    className="w-full text-left p-4 hover:bg-ceviche-teal/10 flex items-start gap-3 border-b border-white/5 last:border-0 transition-all group"
-                  >
-                    <MapPin size={16} className="text-ceviche-teal mt-0.5 shrink-0 group-hover:scale-125 transition-transform" />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-bold text-white leading-tight">
-                        {res.display_name.split(',')[0]}
-                      </span>
-                      <span className="text-[10px] text-white/40 truncate max-w-[300px]">
-                        {res.display_name.split(',').slice(1).join(',')}
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                {searchResults.map((res, i) => {
+                  const addr = res.address || {};
+                  const mainTitle = addr.house_number 
+                    ? `${addr.road} ${addr.house_number}`
+                    : addr.road || addr.pedestrian || addr.suburb || res.display_name.split(',')[0];
+                  
+                  const subTitle = res.display_name.split(',').slice(1).join(',').trim();
+
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => selectResult(res)}
+                      className="w-full text-left p-4 hover:bg-ceviche-teal/10 flex items-start gap-3 border-b border-white/5 last:border-0 transition-all group"
+                    >
+                      <MapPin size={16} className="text-ceviche-teal mt-0.5 shrink-0 group-hover:scale-125 transition-transform" />
+                      <div className="flex flex-col gap-0.5 overflow-hidden">
+                        <span className="text-xs font-bold text-white leading-tight truncate">
+                          {mainTitle}
+                        </span>
+                        <span className="text-[10px] text-white/40 truncate">
+                          {subTitle}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <div className="p-8 text-center text-white/40 text-xs font-bold uppercase tracking-widest">

@@ -27,7 +27,8 @@ def geocode_proxy(request):
     if not query:
         return Response({'error': 'No query provided'}, status=status.HTTP_400_BAD_REQUEST)
     
-    url = f"https://nominatim.openstreetmap.org/search?format=json&q={query}&limit=5"
+    # Añadimos addressdetails=1 para obtener el desglose y countrycodes=mx para precisión local
+    url = f"https://nominatim.openstreetmap.org/search?format=json&q={query}&limit=5&addressdetails=1&countrycodes=mx"
     headers = {'User-Agent': 'LosPlacosones-App/1.0'}
     
     try:
@@ -44,7 +45,8 @@ def reverse_geocode_proxy(request):
     if not lat or not lon:
         return Response({'error': 'Missing coordinates'}, status=status.HTTP_400_BAD_REQUEST)
     
-    url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}"
+    # También pedimos detalles en la búsqueda inversa
+    url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&addressdetails=1"
     headers = {'User-Agent': 'LosPlacosones-App/1.0'}
     
     try:
