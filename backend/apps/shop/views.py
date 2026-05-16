@@ -27,8 +27,11 @@ def geocode_proxy(request):
     if not query:
         return Response({'error': 'No query provided'}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Añadimos addressdetails=1 para obtener el desglose y countrycodes=mx para precisión local
-    url = f"https://nominatim.openstreetmap.org/search?format=json&q={query}&limit=5&addressdetails=1&countrycodes=mx"
+    # Optimizamos para Phoenix, Arizona:
+    # countrycodes=us (EE.UU.)
+    # viewbox=-112.32,33.29,-111.92,33.81 (Área metropolitana de Phoenix)
+    # bounded=1 (Prioriza resultados dentro del área)
+    url = f"https://nominatim.openstreetmap.org/search?format=json&q={query}&limit=5&addressdetails=1&countrycodes=us&viewbox=-112.32,33.29,-111.92,33.81&bounded=1"
     headers = {'User-Agent': 'LosPlacosones-App/1.0'}
     
     try:
