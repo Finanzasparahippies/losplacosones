@@ -18,7 +18,9 @@ export default function FeaturedProducts() {
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const response = await fetch('/api/shop/products/');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+        console.log('Fetching from:', `${apiUrl}/shop/products/`);
+        const response = await fetch(`${apiUrl}/shop/products/`);
         if (response.ok) {
           const data = await response.json();
           // Take only the first 3 products for the landing page
@@ -57,8 +59,8 @@ export default function FeaturedProducts() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       {products.map((item, i) => (
-        <div 
-          key={item.id} 
+        <div
+          key={item.id}
           className={`p-8 bg-ceviche-brown rounded-premium border-t-8 ${colors[i % 3]} shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer group relative overflow-hidden`}
         >
           {/* Background decoration */}
@@ -74,12 +76,12 @@ export default function FeaturedProducts() {
                 '🥣'
               )}
             </div>
-            
+
             <h4 className="text-2xl font-black uppercase italic mb-2 group-hover:text-ceviche-lime transition-colors leading-none">{item.name}</h4>
             <p className="text-ceviche-white/50 text-xs mb-8 leading-relaxed font-medium line-clamp-2">
               {item.description}
             </p>
-            
+
             <div className="flex justify-between items-center mt-auto pt-4 border-t border-white/5">
               <span className="text-3xl font-black text-ceviche-orange">${item.price}</span>
               <span className="bg-ceviche-lime text-ceviche-brown px-3 py-1 rounded-full text-[9px] uppercase font-black tracking-widest shadow-lg shadow-ceviche-lime/20">
